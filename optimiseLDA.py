@@ -14,8 +14,8 @@ import os
 #Script to perform grid search of vocab size and number of topics on corpus
 #Will save each generated gensim topic model and perplexity matrix
 #Metric used for model performance is 90/10 train/test split of perplexity
-#Full credit for the difficult part of this (LDA classification goes to Radim Řehůřek for 
-#the excellent gensim toolkit http://radimrehurek.com/gensim/)
+#Full credit for the difficult part of this (LDA analysis) goes to Radim Řehůřek for 
+#the excellent gensim toolkit http://radimrehurek.com/gensim/
 
 
 #Turn on gensim logging
