@@ -1,4 +1,3 @@
-import cPickle, string, numpy, getopt, sys, random, time, re, pprint
 import numpy as np
 import glob
 from gensim import corpora, models
@@ -8,7 +7,6 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
 import logging
 import matplotlib.pyplot as plt
-import copy
 from matplotlib.backends.backend_pdf import PdfPages
 import os
 
