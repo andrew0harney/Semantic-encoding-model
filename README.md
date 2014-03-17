@@ -13,12 +13,19 @@ Requirements:
 signal management utility - https://github.com/andrew0harney/Multi-channel-signal-management-utility 
 numpy
 pandas
+gensim (great LDA package http://radimrehurek.com/gensim/)
+
+######################################
+Files:
+Grid Regression
 
 
 #######################################
 Notes:
 
 While some effort was made to keep this code general, it was ultimately written with a specific project in mind. Therefore it is not intendended as a general release package, however, I hope it may provide some use and it should still be straightforward to adapt.
+
+
 
 
 Please also refer to to the accompanying license before using any of this code.
