@@ -10,11 +10,12 @@ b) Preict (decode) what generated the signal
 ####################################
 Requirements:
 
-signal management utility - https://github.com/andrew0harney/Multi-channel-signal-management-utility \n
-numpy\n
+signal management utility - https://github.com/andrew0harney/Multi-channel-signal-management-utility
+numpy
 pandas
-gensim - (great LDA package http://radimrehurek.com/gensim/)\m
-nltk - If you wish to perform advanced natural language processing for topic clustering http://www.nltk.org/\n
+gensim - (great LDA package http://radimrehurek.com/gensim/)
+nltk - If you wish to perform advanced natural language processing for topic clustering http://www.nltk.org/
+
 ######################################
 Files:
 Grid Regression
