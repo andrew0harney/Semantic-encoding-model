@@ -11,6 +11,8 @@ b) Preict (decode) what generated the signal
 Requirements:
 
 signal management utility - https://github.com/andrew0harney/Multi-channel-signal-management-utility 
+numpy
+pandas
 
 
 #######################################
