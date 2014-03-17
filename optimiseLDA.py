@@ -50,10 +50,11 @@ for document in documents:
 
 random.shuffle(documents)
 
+#Store full corpora and dictionaries
 print 'Creating Vocab'
 dictionary = corpora.Dictionary(documents)
 print 'Number of unique objects %d'%len(dictionary)
-dictionary.save(fname=dictionaryName) # store the dictionary, for future reference
+dictionary.save(fname=dictionaryName)
 #
 print 'Creating training corpus'
 print 'Total number of images: %d'%len(documents)
@@ -95,7 +96,7 @@ for i,num_words in enumerate(nwords):
         lda = models.ldamodel.LdaModel(corpus=t_corp, id2word=t_dict, num_topics=num_topics, update_every=0, chunksize=len(t_corp), passes=50,alpha='auto')
         #Save data for this model
         lda.save(fname=name+'/model')
-        t_dict.save(fname=name+'/dictionary') # store the dictionary, for future reference
+        t_dict.save(fname=name+'/dictionary')
         pickle.dump(t_docs,open(name+'/documents','w'))
         corpora.MmCorpus.serialize(name+'/corp', t_corp)
         perplexity[j,i]= np.exp2(-lda.bound(corpTest) / sum(cnt for document in corpTest for _, cnt in document)) #Normalized test perplexity
