@@ -69,7 +69,7 @@ perplexityName = #Save path for perplexity matrix
 nwords = np.arange(200,900,100) #Range of vocab lengths to perform grid search
 ntopics = np.arange(10,32,2)  #Range of topic lengths to perform grid search
 perplexity = np.zeros([len(ntopics),len(nwords)])
-testSize = 0.9 #fraction of total documents to train on
+trainSize = 0.9 #fraction of total documents to train on
 
 resultsRoot = #Output folder paths for each of the lda classifiers
 for i,num_words in enumerate(nwords):
@@ -82,7 +82,7 @@ for i,num_words in enumerate(nwords):
     t_corp = [t_dict.doc2bow(doc) for doc in t_docs] #Create training corpus
     #
     #Training and test sets
-    s = int(testSize*len(t_corp))
+    s = int(trainSize*len(t_corp))
     corpTrain = t_corp[:s]
     corpTest = t_corp[s:]
     #
@@ -91,6 +91,7 @@ for i,num_words in enumerate(nwords):
         os.mkdir(name)
         print '# Words: %d \t # Topics: %d'%(len(t_dict),num_topics)
         #Train model
+        #LDA training with asymetric priors on topic distribution and 50 iterations for VB
         lda = models.ldamodel.LdaModel(corpus=t_corp, id2word=t_dict, num_topics=num_topics, update_every=0, chunksize=len(t_corp), passes=50,alpha='auto')
         #Save data for this model
         lda.save(fname=name+'/model')
