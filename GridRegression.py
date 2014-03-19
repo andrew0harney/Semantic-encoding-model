@@ -19,7 +19,7 @@ class GridRegression:
     __longestEvent__ = None
     __encoding__ = None
     
-    def __init__(self,,nlags=0,noiseOrders=None,encoding=None):
+    def __init__(self,grid,nlags=0,noiseOrders=None,encoding=None):
         self.setNumLags(nlags)
         self.setGrid(grid)
         self.setNoiseOrders(noiseOrders)
