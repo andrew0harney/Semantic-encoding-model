@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from SignalManager import SignalManager
+from SignalManager import SignalManager,longest_event
 from numpy.polynomial import Legendre
 
 class GridRegression:
