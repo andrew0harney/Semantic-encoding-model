@@ -2,6 +2,10 @@ import numpy as np
 import pandas as pd
 from SignalManager import SignalManager,longest_event
 from numpy.polynomial import Legendre
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('__GridRegression__')
 
 class GridRegression:
     #Help with regression over grid data
@@ -61,39 +65,39 @@ class GridRegression:
     
     #Setters
     def setEvents(self,events):
-        print 'Setting events'
+        logger.info( 'Setting events')
         self.__events__ = events
     def setNoise(self,noise):
-        print 'Setting noise matrix'
+        logger.info( 'Setting noise matrix')
         #Noise should be a matrix of length=grid.times() describing noise in the signal over time
         self.__noise__ = noise
         
     def setCov(self,cov,times):
-        print 'Setting covariance matrix'
+        logger.info( 'Setting covariance matrix')
         self.__cov__ = self.regMatrix(cov,times)
     def setCoefs(self,coefs):
-        print 'Setting coefficients'
+        logger.info( 'Setting coefficients')
         self.__coefs__ = coefs
     def setGrid(self,grid):
-        print 'Setting grid'
+        logger.info( 'Setting grid')
         #Change grid and update noise matrix if necessary
         self.__grid__ = grid
         
     def setNumLags(self,numLags):
-        print 'Setting number of lags'
+        logger.info( 'Setting number of lags')
         self.__nlags__ = numLags
         
     def setNoiseOrders(self,noiseOrders):
-        print 'Setting polynomial orders for noise matrix'
+        logger.info( 'Setting polynomial orders for noise matrix')
         #Set maximum order of noise and update the matrix
         self.__noiseOrders__= noiseOrders
         self.setNoise(self.genNoise(self.grid(), self.noiseOrders()))
 
     def setLongestEvent(self,longestEvent):
-        print 'setting longest event time'
+        logger.info( 'setting longest event time')
         self.__longestEvent__ = longestEvent
     def setEncoding(self,encoding):
-        print 'Setting encoding to be used in design matrix'
+        logger.info( 'Setting encoding to be used in design matrix')
         self.__encoding__ = encoding
     
     #ML functions
@@ -102,7 +106,7 @@ class GridRegression:
         #Additionally 60Hz sine and cosine waves are added to account for the DC component of EEG
 
         if self.grid() is not None and self.noiseOrders() is not None:
-            print 'Generating noise matrix'
+            logger.info( 'Generating noise matrix')
             legpoly = np.array([Legendre.basis(i)(np.arange(len(grid.times()))) for i in self.noiseOrders()]).T #Polynomials
             sw = np.sin(60 * np.arange(len(grid.times())) * 2 * np.pi / float(grid.fs())) # Sine for AC component
             cw = np.cos(60 * np.arange(len(grid.times())) * 2 * np.pi / float(grid.fs())) # Cosine for AC component
@@ -139,7 +143,7 @@ class GridRegression:
             prevCode = code
         return pd.DataFrame(design,index=times)
     
-    def train(self,events,y,encoding=None,longest=None):
+    def train(self,events,y,encoding=None,longest=None,itrUpdate=1):
         #Least squares parameter estimation (without loading entire design matrix)
         #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
         #Encoding - dictionary that has row encodings for a given label(not including lags)
@@ -175,13 +179,16 @@ class GridRegression:
             covMatrix += design.T*design #Calculate partial covMatrix
             times = np.hstack((times,t.values)) #Add times to index
             prevCode = design[-1]
+            if not i%itrUpdate:
+                logger.info('Processed event %d'%(i))
+            
         #
         self.setCov(np.array(covMatrix), times)
         self.setCoefs(np.invert(covMatrix)*R)
         return self.cov()
     
     def predict(self,eventsPredict,coefs=None,longest=None):
-        print 'Predicting'
+        logger.info( 'Predicting')
         if coefs is None:
             coefs = self.coefs()
         if longest is None:
