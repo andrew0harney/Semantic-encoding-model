@@ -122,7 +122,10 @@ class GridRegression:
             encoding = self.encoding()
         
         nClasses = len(encoding)
+        logger.debug('nClasses : %d'%(nClasses))
+        
         npoints = self.nlags()*nClasses+nClasses #Number of columns in design matrix
+        logger.debug('npoints : %d'%(npoints))
         
         if prevCode is None:
             prevCode = np.zeros([npoints])
@@ -134,6 +137,7 @@ class GridRegression:
         design = []
         [start,stop,label] = event[['pulse.on','pulse.off','label']].values
         times = grid.times()[grid.time_to_index(start):grid.time_to_index(stop)]
+        logger.debug('Event size : %d'%(len(times)))
         noise = self.noise().ix[times]
         for time in times.values:
             code = np.hstack((np.zeros([npoints]),noise.ix[time]))
@@ -180,7 +184,7 @@ class GridRegression:
             times = np.hstack((times,t.values)) #Add times to index
             prevCode = design[-1]
             if not i%itrUpdate:
-                logger.info('Processed event %d'%(i))
+                logger.info('Trained event %d'%(i))
             
         #
         self.setCov(np.array(covMatrix), times)
@@ -195,7 +199,7 @@ class GridRegression:
             longest = self.longestEvent()
        
         times = self.trainTimes()
-        result = pd.DataFrame(np.zeros([coefs.shape[0],len(times)]),index=times)
+        result = pd.DataFrame(np.zeros([coefs.shape[0],len(times)]),index=times,itrUpdate=1)
         prevCode = np.zeros([len(coefs)])
         
         #Calculate the prediction event-wise
@@ -204,4 +208,6 @@ class GridRegression:
             t = design.index #times that 
             design = np.matrix(design.values) #Assign the correct part of the signal
             result[t] = design
+            if not i%itrUpdate:
+                logger.info('Predicted event %d'%(i))
         return result
