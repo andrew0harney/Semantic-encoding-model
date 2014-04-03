@@ -21,6 +21,7 @@ class GridRegression:
     __grid__ = None
     __noiseOrders__ = None
     __cov__ = None
+    __R__ = None
     __coefs__ = None
     __events__ = None
     __longestEvent__ = None
@@ -165,6 +166,7 @@ class GridRegression:
             design[i,lagCols] = prevCode[lagCols-1]
             prevCode = design[i,:]
         return pd.DataFrame(design,index=times)
+    
     
     def train(self,events,y,encoding=None,longest=None,regParams=[0]):
         #Least squares ridge regression (without loading entire design matrix) 
