@@ -4,6 +4,7 @@ from andyClasses.SignalManager import SignalManager,longest_event
 from numpy.polynomial import Legendre
 import logging,warnings
 import pickle
+from sklearn import linear_model
 
 
 logging.basicConfig(level=logging.INFO)
@@ -27,27 +28,35 @@ class GridRegression:
     __longestEvent__ = None
     __encoding__ = None
     __lambda__ = None
+    __nClasses__ = None
+    __nPoints__ = None
+    
     
     def __init__(self,grid,nlags=0,noiseOrders=None,encoding=None):
         self.setNumLags(nlags)
         self.setGrid(grid)
         self.setNoiseOrders(noiseOrders)
         self.setEncoding(encoding)
+        self.setnClasses(encoding.numClasses())
+        self.setnPoints(self.nlags()*self.nClasses()+self.nClasses()+len(self.noise().columns)) #Number of columns in design matrix
 
     class regMatrix():
         #Quick class to encapsulate the results from covariance calculations
-        matrix = None
-        index = None
+        values = None
+        times = None
         def __init__(self,matrix,index):
-            self.matrix = matrix
-            self.index = index
-    
-    
+            self.values = matrix
+            self.times = index
+
     #Getters
     def grid(self):
         return self.__grid__
     def noise(self):
         return self.__noise__
+    def nClasses(self):
+        return self.__nClasses__
+    def nPoints(self):
+        return self.__nPoints__
     def noiseOrders(self):
         return self.__noiseOrders__
     def nlags(self):
@@ -57,10 +66,10 @@ class GridRegression:
         return self.__cov__
     def covMatrix(self):
         #Return the raw covariance matrix
-        return self.cov().matrix
+        return self.cov().values
     def times(self):
         #Times used for training
-        return self.cov().index
+        return self.cov().times
     def coefs(self):
         #Infered parameters
         return self.__coefs__
@@ -73,7 +82,10 @@ class GridRegression:
     def encoding(self):
         #Encoding matrix for gesign
         return self.__encoding__
-    
+    def alphaH(self):
+        return self.coefs()[:,:-self.noise().shape[1]]
+    def betaH(self):
+        return self.coefs()[:,self.noise().shape[1]:]
     #Setters
     def setEvents(self,events):
         logger.info( 'Setting events')
@@ -82,7 +94,10 @@ class GridRegression:
         logger.info( 'Setting noise matrix')
         #Noise should be a matrix of length=grid.times() describing noise in the signal over time
         self.__noise__ = noise
-        
+    def setnClasses(self,nclasses):
+        self.__nClasses__ = nclasses
+    def setnPoints(self,npoints):
+        self.__nPoints__ = npoints
     def setCov(self,cov,times):
         logger.info( 'Setting covariance matrix')
         self.__cov__ = self.regMatrix(cov,times)
@@ -107,7 +122,7 @@ class GridRegression:
 
     def setLongestEvent(self,longestEvent):
         logger.info( 'setting longest event time')
-        self.__longestEvent__ = float(longestEvent)*self.grid().fs()
+        self.__longestEvent__ = int(longestEvent*self.grid().fs())
         
     def setEncoding(self,encoding):
         logger.info( 'Setting encoding to be used in design matrix')
@@ -138,9 +153,9 @@ class GridRegression:
         
         if longest is not None:
             self.setLongestEvent(longest)
-        else:
-            longest=self.longestEvent()
-      
+        
+        longest=self.longestEvent()
+        
         nClasses = encoding.numClasses()
         logger.debug('nClasses : %d'%(nClasses))
         
@@ -166,51 +181,70 @@ class GridRegression:
             design[i,lagCols] = prevCode[lagCols-1]
             prevCode = design[i,:]
         return pd.DataFrame(design,index=times)
-    
-    
-    def train(self,events,y,encoding=None,longest=None,regParams=[0]):
-        #Least squares ridge regression (without loading entire design matrix) 
-        #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
-        #Encoding - dictionary that has row encodings for a given label(not including lags)
-                
+            
+    def __genX__(self,events):         
+        from tempfile import mkdtemp
+        import os.path as path
+                       
         #Set longest event in samples
+        longest = self.longestEvent()
+        allNumPoints = self.grid().eventsTimes(events,limit=longest)
+        self.setEvents(events)
+        npoints = self.nPoints()
+        logger.info('Preparing design matrix')
+        filename = path.join(mkdtemp(), 'tempX.dat')
+        X = np.memmap(filename, dtype='float32', mode='w+', shape=(len(allNumPoints),npoints)) 
+        X.times = allNumPoints
+        
+        #Build X
+        prevCode = np.zeros([npoints])
+        pos = 0
+        for i in range(len(events)):
+            logger.info('Generating event %d/%d design'%(i+1,len(events)))
+            design = self.event_design(events.iloc[i],prevCode=prevCode) #Get design matrix for event
+            t = design.index #times for the event
+            design = design.values
+            X[pos:pos+len(t),:] = design
+            #
+            pos+=len(t)
+            prevCode = design[-1,:]
+        
+        return X
+    
+    def train(self,events,y,encoding=None,longest=None,regParams=None):
+        #Train LS regression. Uses memory map for large X
         if longest is not None:
             self.setLongestEvent(longest)
-        if encoding is None:
-            encoding = self.encoding()        
-        self.setEvents(events)
-
-        #Parameters
-        nClasses = encoding.numClasses()
-        npoints = self.nlags()*nClasses+nClasses+len(self.noise().columns) #Number of columns in design matrix
+        if encoding is not None:
+            self.setEncoding(encoding)
         
-        #Covariance matrix of designMatrix
-        # NOTE : OBVIOUS ABILITY for parallelisation 
-        for lmda in regParams:
-            covMatrix = np.zeros([npoints,npoints])
-            R = np.zeros([npoints,len(y.columns)])
-            times = np.array([])
-            prevCode = np.zeros([npoints])
-            #Get covariance for each event
-            for i in range(len(events)):
-                logger.info('Training progress (lambda %f): event %d/%d'%(lmda,i+1,len(events)))
-                design = self.event_design(events.iloc[i],prevCode=prevCode) #Get design matrix for event
-                t = design.index #times for the event
-                design = design.values #Get values
-                #
-                R += np.dot(design.T,y.ix[t].values) #Regressor 
-                covMatrix += np.dot(design.T,design) #Calculate partial covMatrix
-                times = np.hstack((times,t.values)) #Add times to index
-                prevCode = design[-1,:]
-                
-            #
-            coefs = np.dot(np.linalg.inv(covMatrix+lmda*np.eye(len(covMatrix))),R) #Niave implementation but fine for out purposes
-        self.setCov(np.array(covMatrix), times)
+        X = self.__genX__(events)
+        #Predict
+        logger.info('Inferring parameters')
+        reglin = linear_model.RidgeCV(fit_intercept=True,normalize=True)
+        reglin.fit(X, y.ix[X.times])
+        coefs = reglin.coef_
+        coefs[:,-self.noise().shape[1]] = reglin.intercept_
         self.setCoefs(coefs)
-        self.setLambda(lmda)
-        return self.coefs()
+        self.setCov(X, X.times)
+        return self.coefs()   
         
     def predict(self,events,coefs=None,longest=None):
+        logger.info( 'Predicting')
+        if coefs is None:
+            coefs = self.coefs()
+        
+        if longest is not None:
+            self.setLongestEvent(longest)
+        X = self.__genX__(events)
+        self.setCov(X, X.times)
+        return pd.DataFrame(np.dot(X,coefs),columns = self.grid().wc(),index=X.times)
+    
+    #####################
+    #####################
+    #####################
+    #UNDER DEVELOPMENT:  ONLINE RL REGRESSION METHODS
+    def online_predict(self,events,coefs=None,longest=None):
         #Events to predict from
         #coefs - weighting parameters to use if not the infered ones from the training step
         #Longest event in num samples
@@ -243,6 +277,46 @@ class GridRegression:
             result.ix[times] = np.dot(design,coefs) #Add times to index
         
         return result
+    
+    
+    def online_train(self,events,y,encoding=None,longest=None,regParams=[0]):
+        #Least squares ridge regression (without loading entire design matrix) 
+        #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
+        #Encoding - dictionary that has row encodings for a given label(not including lags)
+                
+        #Set longest event in samples
+        if longest is not None:
+            self.setLongestEvent(longest)
+        if encoding is None:
+            encoding = self.encoding()
+                
+        self.setEvents(events)
+        npoints = self.nPoints()
+        
+        #Covariance matrix of designMatrix
+        # NOTE : OBVIOUS ABILITY for parallelisation 
+
+        covMatrix = np.zeros([npoints,npoints])
+        R = np.zeros([npoints,len(y.columns)])
+        times = np.array([])
+        prevCode = np.zeros([npoints])
+        #Get covariance for each event
+        for i in range(len(events)):
+            logger.info('Training progress (lambda %f): event %d/%d'%(0,i+1,len(events)))
+            design = self.event_design(events.iloc[i],prevCode=prevCode) #Get design matrix for event
+            t = design.index #times for the event
+            design = design.values #Get values
+            #
+            R += np.dot(design.T,y.ix[t].values) #Regressor 
+            covMatrix += np.dot(design.T,design) #Calculate partial covMatrix
+            times = np.hstack((times,t.values)) #Add times to index
+            prevCode = design[-1,:]
+        #
+        coefs = np.dot(np.linalg.inv(covMatrix+0*np.eye(len(covMatrix))),R) #Niave implementation but fine for out purposes
+        self.setCov(np.array(covMatrix), times)
+        self.setCoefs(coefs)
+
+        return self.coefs()
     
 def pull_signal(grid,designMatrix):
     return designMatrix.index
