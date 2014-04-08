@@ -279,10 +279,18 @@ class GridRegression:
         design = self.__iterX__(events)
         N = 0
         for X,times in design:
-            designMean += np.sum(X,axis=0)
+            designMean += np.sum(X[:self.__longestEvent__,:],axis=0)
             N += len(times)
         return designMean / N
     
+    def l2Norm(self,events):
+        logger.info('Calculating l2Norm')
+        l2 = np.zeros(self.nPoints())
+        design = self.__iterX__(events)
+        for X,_ in design:
+            l2 += np.sum(X[:self.__longestEvent__,:]**2,axis=0)    
+        return np.sqrt(l2)
+     
     def varDesign(self,events,mean=None):
         if mean is None:
             mean = self.meanDesign(events)
@@ -292,12 +300,14 @@ class GridRegression:
         design = self.__iterX__(events)
         N = 0
         for X,times in design:
-            designVar += np.sum((X-mean)**2,axis=0)
+            designVar += np.sum((X[:self.__longestEvent__]-mean)**2,axis=0)
             N += len(times)
-        return designVar / N
-      
+        return designVar / (N-1)
+    
+    def online_varDesign(self,events):
+        pass  
         
-    def online_train(self,events,y,encoding=None,longest=None,normalise=True):
+    def online_train(self,events,y,encoding=None,longest=None,normalise=None):
         #Least squares ridge regression (without loading entire design matrix) 
         #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
         #Encoding - dictionary that has row encodings for a given label(not including lags)    
@@ -305,22 +315,30 @@ class GridRegression:
             self.setLongestEvent(longest)
         if encoding is not None:
             self.setEncoding(encoding)
-        if normalise:
-            self.__designMean__ = self.meanDesign(events)
-            self.__designVar__ = self.varDesign(events,self.__designMean__)
-            designSTD = self.__designVar__**0.5
+        if normalise is not None:
+            if normalise == 'zscore':
+                self.__designMean__ = self.meanDesign(events)
+                self.__designVar__ = self.varDesign(events,self.__designMean__)
+                designSTD = self.__designVar__**0.5
+                normfunc = lambda x: (x-self.__designMean__)/designSTD
+            elif normalise == 'l2':
+                l2Norm = self.l2Norm(events)
+                normfunc = lambda x: x/l2Norm
+            else:
+                normalise = None         
         self.setEvents(events)
         mv = len(self.grid().wc())
         
         #Predict
         logger.info('Inferring parameters')
         design = self.__iterX__(events)
-        reglins = [linear_model.SGDRegressor(fit_intercept=True) for i in range(mv)]
+        reglins = [linear_model.SGDRegressor(fit_intercept=True) for i in range(mv)] #Model for each target variable
         
         for j,(X,times) in enumerate(design):
             logger.info('Processing event %d'%(j))
-            X_block = (X-self.__designMean__)/designSTD if normalise else X #Zscore
+            X_block = normfunc(X) if normalise else X #Zscore
             X_block[np.isnan(X_block)] = 0
+            
             for i in range(mv):
                 reglins[i].partial_fit(X_block,y.ix[times].values[:,i])
         
