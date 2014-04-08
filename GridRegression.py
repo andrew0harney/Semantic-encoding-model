@@ -7,6 +7,8 @@ import pickle
 from sklearn import linear_model
 from sklearn import preprocessing
 
+#Andrew O'Harney 2014
+#Wrapper for Stochastic gradient descent linear regression over grids data
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('__GridRegression__')
