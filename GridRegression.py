@@ -1,18 +1,77 @@
 import numpy as np
 import pandas as pd
-from andyClasses.SignalManager import SignalManager,longest_event
 from numpy.polynomial import Legendre
-import logging,warnings
-import pickle
+import logging
 from sklearn import linear_model
-from sklearn import preprocessing
 
-#Andrew O'Harney 2014
-#Wrapper for Stochastic gradient descent linear regression over grids data
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('__GridRegression__')
 
+    
+#Online regression classes
+class model():
+    __coefs__ = None
+
+    def coefs(self):
+        if self.__coefs__ is None:
+            self.setCoefs()
+        return self.__coefs__    
+
+    def setCoefs(self,coefs):
+        pass
+    def partial_fit(self,X,y):
+        pass
+    def predict(self,X):
+        pass
+    
+class onlineLinearRegression(model):
+    
+    __R__ = None
+    __cov__ = None
+    
+    def partial_fit(self,X,y):
+        self.__coefs__ = None
+        self.__cov__ += np.dot(X,X.T)
+        self.__R__ += np.dot(X,y.values)
+    
+    def setCoefs(self,coefs=None):
+        if coefs is None:
+            self.__coefs__ = np.dot(np.invert(self.__cov__),self.__R__)
+        else:
+            self.__coefs__ = coefs
+        
+    def predict(self,X):
+        if self.__coefs__ is None:
+            self.setCoefs()
+        return np.dot(self.__coefs__,X)
+    
+class onlineSGDRegression(model):
+    
+    __model__ = None
+    __ntargets__ = None
+    def partial_fit(self,X,y):
+        self.__ntargets__ = len(y.columns)
+        self.__coefs__ = None
+        
+        if self.__model__ is None:
+            self.__model__ = [linear_model.SGDRegressor() for i in range(self.__ntargets__)] #Model for each target variable        
+        for i in range(self.__ntargets__):
+            self.__model__[i].partial_fit(X,y.values[:,i])
+        
+    def setCoefs(self,coefs=None):
+        if coefs is None:
+            self.__coefs__ = np.array([reglin.coef_ for reglin in self.__model__])
+        else:
+            self.__coefs__ = coefs
+             
+    def predict(self,X):
+        if self.__coefs__ is None:
+            self.setCoefs()
+        coefs = self.coefs()
+        for i in range(self.__ntargets__):
+                model = self.__model__[i]
+                model.coef_ = coefs[i,:]
 
 class GridRegression:
     #Help with regression over grid data
@@ -24,8 +83,6 @@ class GridRegression:
     __nlags__ = None
     __grid__ = None
     __noiseOrders__ = None
-    __cov__ = None
-    __R__ = None
     __coefs__ = None
     __events__ = None
     __longestEvent__ = None
@@ -33,8 +90,8 @@ class GridRegression:
     __lambda__ = None
     __nClasses__ = None
     __nPoints__ = None
-    __designMean__ = None
-    __designVar__ = None
+    __normFunc__ = None
+    __model__ = None           
     
     def __init__(self,grid,nlags=0,noiseOrders=None,encoding=None):
         self.setNumLags(nlags)
@@ -43,14 +100,6 @@ class GridRegression:
         self.setEncoding(encoding)
         self.setnClasses(encoding.numClasses())
         self.setnPoints(self.nlags()*self.nClasses()+self.nClasses()+len(self.noise().columns)) #Number of columns in design matrix
-
-    class regMatrix():
-        #Quick class to encapsulate the results from covariance calculations
-        values = None
-        times = None
-        def __init__(self,matrix,index):
-            self.values = matrix
-            self.times = index
 
     #Getters
     def grid(self):
@@ -65,18 +114,9 @@ class GridRegression:
         return self.__noiseOrders__
     def nlags(self):
         return self.__nlags__
-    def cov(self):
-        #Returns a regMatrix object
-        return self.__cov__
-    def covMatrix(self):
-        #Return the raw covariance matrix
-        return self.cov().values
-    def times(self):
-        #Times used for training
-        return self.cov().times
     def coefs(self):
-        #Infered parameters
-        return self.__coefs__
+        #Inferred parameters
+        return self.__model__.coefs()
     def events(self):
         #Current events in use
         return self.__events__
@@ -102,17 +142,13 @@ class GridRegression:
         self.__nClasses__ = nclasses
     def setnPoints(self,npoints):
         self.__nPoints__ = npoints
-    def setCov(self,cov,times):
-        logger.info( 'Setting covariance matrix')
-        self.__cov__ = self.regMatrix(cov,times)
     def setCoefs(self,coefs):
         logger.info( 'Setting coefficients')
-        self.__coefs__ = coefs
+        self.__model__.setCoefs(coefs)
     def setGrid(self,grid):
         logger.info( 'Setting grid')
         #Change grid and update noise matrix if necessary
         self.__grid__ = grid
-        
     def setNumLags(self,numLags):
         logger.info( 'Setting number of lags')
         self.__nlags__ = numLags
@@ -187,7 +223,8 @@ class GridRegression:
             prevCode = design[i,:]
         return pd.DataFrame(design,index=times)
             
-    def genX(self,events):         
+    def genX(self,events):
+        #Generates the event matrix for events (in memory)       
         from tempfile import mkdtemp
         import os.path as path
                        
@@ -216,40 +253,9 @@ class GridRegression:
         
         return X
     
-    
-    def train(self,events,y,encoding=None,longest=None,regParams=None,normalise=False):
-        #Train LS regression. Uses memory map for large X
-        if longest is not None:
-            self.setLongestEvent(longest)
-        if encoding is not None:
-            self.setEncoding(encoding)
-        
-        X = self.__genX__(events)
-        #Predict
-        logger.info('Inferring parameters')
-        reglin = linear_model.SGDRegressor(fit_intercept=True)
-        reglin.fit(X, y.ix[X.times])
-        coefs = reglin.coef_
-        coefs[:,-self.noise().shape[1]] = reglin.intercept_
-        self.setCoefs(coefs)
-        self.setCov(X, X.times)
-        return self.coefs()   
-    
-    def predict(self,events,coefs=None,longest=None):
-        logger.info( 'Predicting')
-        if coefs is None:
-            coefs = self.coefs()
-        
-        if longest is not None:
-            self.setLongestEvent(longest)
-        X = self.__genX__(events)
-        self.setCov(X, X.times)
-        return pd.DataFrame(np.dot(X,coefs),columns = self.grid().wc(),index=X.times)
-    
-    #####################
-    #UNDER DEVELOPMENT:  ONLINE RL REGRESSION METHODS
     def __iterX__(self,events):      
-     
+        #Generator for event matrix blocks
+        
         encoding = self.encoding()             
         longest=self.longestEvent()      
         nClasses = encoding.numClasses()       
@@ -275,6 +281,7 @@ class GridRegression:
             yield design,times
             
     def meanDesign(self,events):
+        #Calculates the mean on columns of the full events matrix
         
         logger.info('Calculating design mean')
         designMean = np.zeros(self.nPoints())
@@ -285,15 +292,28 @@ class GridRegression:
             N += len(times)
         return designMean / N
     
+    def l1Norm(self,events):
+        #Calculates the l1 normalisation parameter on columns of the design matrix
+        
+        logger.info('Calculating l1Norm')
+        l1 = np.zeros(self.nPoints())
+        design = self.__iterX__(events)
+        for X,_ in design:
+            l1 += np.sum(np.abs(X[:self.__longestEvent__,:]),axis=0)    
+        return np.sqrt(l1)
+    
     def l2Norm(self,events):
+        #L2 norm for real valued event matrix
         logger.info('Calculating l2Norm')
         l2 = np.zeros(self.nPoints())
         design = self.__iterX__(events)
         for X,_ in design:
             l2 += np.sum(X[:self.__longestEvent__,:]**2,axis=0)    
         return np.sqrt(l2)
-     
+        
     def varDesign(self,events,mean=None):
+        #Calculates variance on columns of design matrix
+        
         if mean is None:
             mean = self.meanDesign(events)
 
@@ -305,124 +325,68 @@ class GridRegression:
             designVar += np.sum((X[:self.__longestEvent__]-mean)**2,axis=0)
             N += len(times)
         return designVar / (N-1)
-    
-    def online_varDesign(self,events):
-        pass  
-        
-    def online_train(self,events,y,encoding=None,longest=None,normalise=None):
-        #Least squares ridge regression (without loading entire design matrix) 
+           
+    def online_train(self,events,y,encoding=None,longest=None,normalise=None,model='SGD'):
+        #Online training of regression over events 
         #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
-        #Encoding - dictionary that has row encodings for a given label(not including lags)    
+        #Encoding - dictionary that has row encodings for a given label(not including lags)
+        #Normalisation - Normalisation coefficients to apply to columns of the design {zscore,l1,l2}
+        #Model - type of model to use {linear,SGD}
         if longest is not None:
             self.setLongestEvent(longest)
         if encoding is not None:
             self.setEncoding(encoding)
+        if model == 'linear':
+            self.__model__ = onlineLinearRegression()
+        elif model == 'SGD':
+            self.__model__ = onlineSGDRegression()
         if normalise is not None:
+            designMean = self.meanDesign(events)
             if normalise == 'zscore':
-                self.__designMean__ = self.meanDesign(events)
-                self.__designVar__ = self.varDesign(events,self.__designMean__)
-                designSTD = self.__designVar__**0.5
-                normfunc = lambda x: (x-self.__designMean__)/designSTD
+                designVar = self.varDesign(events,self.__designMean__)
+                designSTD = designVar**0.5
+                self.__normFunc__ = lambda x: (x-designMean)/designSTD
             elif normalise == 'l2':
                 l2Norm = self.l2Norm(events)
-                normfunc = lambda x: x/l2Norm
+                self.__normFunc__ = lambda x: (x-designMean)/l2Norm
+            elif normalise == 'l1':
+                l1Norm = self.l1Norm(events)
+                self.__normFunc__ = lambda x : (x-designMean)/l1Norm
             else:
                 normalise = None         
         self.setEvents(events)
-        mv = len(self.grid().wc())
         
         #Predict
-        logger.info('Inferring parameters')
+        logger.info('Training events')
         design = self.__iterX__(events)
-        reglins = [linear_model.SGDRegressor(fit_intercept=True) for i in range(mv)] #Model for each target variable
+        
+        t= np.array([])
         
         for j,(X,times) in enumerate(design):
-            logger.info('Processing event %d'%(j))
-            X_block = normfunc(X) if normalise else X #Zscore
+            logger.info('Training event %d'%(j+1))
+            X_block = self.__normFunc__(X) if normalise else X
             X_block[np.isnan(X_block)] = 0
-            
-            for i in range(mv):
-                reglins[i].partial_fit(X_block,y.ix[times].values[:,i])
-        
-        coefs = np.array([reglin.coef_ for reglin in reglins])
-        coefs[:,-self.noise().shape[1]] = [reglin.intercept_ for reglin in reglins]
-        self.setCoefs(coefs)
-        return self.coefs()
+            self.__model__.partial_fit(X_block,y.ix[times])
+            t = np.concatenate((t,times))
+        return self.__model__.coefs()
     
     def online_predict(self,events,coefs=None):
-        pass
-    
-    
-def pull_signal(grid,designMatrix):
-    return designMatrix.index
-
-
-def gen_designMatrix(grid,events,eventCodes,longest=None,encoding=None,nlags=0):
-      #Generates a design matrix from events to be used for regression
-      #Grid - Grid events come from
-      #Events - events that make up the design matrix
-      #Event codes - events corresponding to regressors (others result in empty rows)
-      #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
-      #nlags - number of lags in the design matrix
-      warnings.warn('This function is deprecated by the now favored GridRegression class', DeprecationWarning, stacklevel=2)
-      
-      #Set longest event in samples
-      if longest is None:
-          longest = longest_event(events)
-      else:
-          longest *= grid.fs()
-      
-      print 'Generating design for %d'%(len(events))
-      encoding  = dict(zip(eventCodes,np.arange(len(eventCodes))))
-      
-      #Parameters
-      nClasses = len(eventCodes)
-      npoints = nlags*nClasses+nClasses #Number of columns in design matrix
-      
-      #Pre-determine design matrix size for efficiency
-      allNumPoints = []
-      for (on,off) in events[['pulse.on','pulse.off']].values:
-          x = grid.num_points(times=[on,off])
-          allNumPoints.append(np.min([longest,x]))     
-      designMatrix = np.zeros([int(np.sum(allNumPoints)),int(npoints)],dtype = 'bool')
-      
-      ix = np.array([]) #Stores the index for the design Matrix
-      times = grid.times()
-  
-      #Create sparse binary masked array
-      row = 0
-      for i,[start,stop,label] in enumerate(events[['pulse.on','pulse.off','event.code']].values):
-          start = grid.snap_time(start)
-          stop = grid.snap_time(stop)
-          
-          numtimes = allNumPoints[i] #How many time points the event lasts for
-          design = np.zeros((int(numtimes),int(npoints))) #The matrix portion for this event
-  
-          #Place the binary mask in the correct column (or leave 0 if isi)
-          if encoding.get(label,-1) >= 0:
-              design[:,int(encoding[label]*(nlags+1)):int(encoding[label]*(nlags+1)+nlags+1)] = np.tile(np.hstack((np.array([1]),np.zeros(nlags))), [numtimes,1]) #Set the appropriate column to 1
-          
-          #Append to the design matrix and record event times
-          designMatrix[int(row):int(row+numtimes),:] = design #Add to event matrix
-          startix = grid.time_to_index(start)
-          eventix = times[np.arange(startix,startix+numtimes)].values
-          ix = np.hstack((ix,eventix))
-          row+=numtimes
-  
-      #Add in lags
-      for start in np.arange(0,npoints,nlags+1):
-          for i,pos in enumerate(np.arange(start+1,start+nlags+1)):
-              master = designMatrix[:,start]
-              designMatrix[i+1:,pos] = master[:-(i+1)]
-      
-      #Set column names
-      cols  = []
-      for event in eventCodes:
-          cols += [event]*(nlags+1)
-      
-      #Return matrix thing as pandas dataframe
-      df = pd.DataFrame(designMatrix,index=ix)
-      df.columns = cols
-      df.colEncoding = encoding
-      return df
-    
+        
+        if coefs is None:
+            coefs= self.coefs()
+        
+        logger.info('Predicting events')
+        design = self.__iterX__(events)
+        ntargets = len(self.grid().wc())
+        grid = self.grid()
+        predictTimes = grid.eventsTimes(events,limit=self.longestEvent()/grid.fs())
+        prediction = pd.DataFrame(np.zeros([len(predictTimes),ntargets]),index=predictTimes,columns=grid.wc())
+        
+        for j,(X,times) in enumerate(design):
+            logger.info('Predicting event %d'%(j+1))
+            X_block = self.__normFunc__(X) if self.__normFunc__ else X
+            X_block[np.isnan(X_block)] = 0
+            prediction = self.__model__.predict(X_block)
+            prediction[times] = model.predict(X_block)  
+                      
+        return prediction 
