@@ -29,6 +29,7 @@ class onlineLinearRegression(model):
     
     __R__ = None
     __cov__ = None
+    __lambda__ = None #Regularisation term
     
     def partial_fit(self,X,y):
         self.__coefs__ = None
@@ -45,6 +46,11 @@ class onlineLinearRegression(model):
         if self.__coefs__ is None:
             self.setCoefs()
         return np.dot(self.__coefs__,X)
+    
+    def __calcLambda__(self):
+        #Define range for lambda (lambdaRange)
+        #Define train and test set (xTrain, XTest)
+        pass
     
 class onlineSGDRegression(model):
     
