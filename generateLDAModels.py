@@ -35,7 +35,7 @@ stemmer = WordNetLemmatizer()
 fnames = []
 
 #Train LDA algorithm from vocab of SUN dataset
-all_obj = '/home/andy/workspace/ecog/Data/cm/sun.db/object_labels.txt'
+all_obj = ''
 documents = [re.findall(r"[\w']+",word) for word in open(all_obj).readlines()] #Documents/images
 
 #Stem words
