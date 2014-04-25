@@ -29,7 +29,7 @@ class LdaEncoder:
             if stimName >= 0:
                 stimWords = self.__docs__[stimName] #Get the labels for the given stimulus
                 topicProbs= self.model().__getitem__(self.__ldaDict__.doc2bow([word for word in stimWords if word in self.__modelWordList__]),eps=n) #Get the topic encoding
-                #return np.array() #Get the topic probabilities
+                #Series with {topicNum:prob} structure
                 return pd.Series([tprob for (_,tprob) in topicProbs],index=[topicNum for (topicNum,_)in topicProbs])
             else: #If it is an isi
                 return np.zeros([self.model().num_topics])
