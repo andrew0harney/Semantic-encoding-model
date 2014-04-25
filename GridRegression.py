@@ -10,6 +10,8 @@ logger = logging.getLogger('__GridRegression__')
 
     
 #Online regression classes
+
+#Base model class for all online Regression methods to be extended from
 class model():
     __coefs__ = None
 
@@ -18,71 +20,99 @@ class model():
             self.setCoefs()
         return self.__coefs__    
 
+    #Set the coefficients to use for prediction
     def setCoefs(self,coefs):
         pass
+    
+    #Add training example(s) to model
     def partial_fit(self,X,y):
         pass
+    
+    #Predict output for X
     def predict(self,X):
         pass
-    
+
+#Naive linear regression
+#Is based on online updates 
 class onlineLinearRegression(model):
     
-    __R__ = None
-    __cov__ = None
-    __lambda__ = None #Regularisation term
+    __R__ = None #(X^t)y
+    __cov__ = None #(X^t)X
     
     def partial_fit(self,X,y):
+        #Update for these values
         self.__coefs__ = None
         self.__cov__ += np.dot(X,X.T)
         self.__R__ += np.dot(X,y.values)
     
     def setCoefs(self,coefs=None):
+        #Will either take supplied coefficients to be used for prediction or will calculate them
+        
         if coefs is None:
+            #Very *naive* method for calculating parameters - use with care!
             self.__coefs__ = np.dot(np.invert(self.__cov__),self.__R__)
         else:
             self.__coefs__ = coefs
         
     def predict(self,X):
+        #Predict the output for some design X
+    
         if self.__coefs__ is None:
             self.setCoefs()
         return np.dot(self.__coefs__,X)
-    
-    def __calcLambda__(self):
-        #Define range for lambda (lambdaRange)
-        #Define train and test set (xTrain, XTest)
-        pass
-    
+
+#Performs Stochastic gradient descent for linear regression
 class onlineSGDRegression(model):
     
-    __model__ = None
-    __ntargets__ = None
+    __model__ = None #List of models (note scikits only allows one target per model)
+    __ntargets__ = None #Number of targets
+    
+    def __init__(self):
+        self.__coefs__ = None
+    
     def partial_fit(self,X,y):
-        self.__ntargets__ = len(y.columns)
+        thisNTargets = len(y.columns)
+        
+        #Sanity check on the number of targets
+        if self.__ntargets__ is None:
+            self.__ntargets__ = thisNTargets
+        else:
+            if self.__ntargets__ != thisNTargets:
+                logger.warn('Number of targets does not match!')
+                return
         self.__coefs__ = None
         
+        #Create models if we don't have them so far
         if self.__model__ is None:
             self.__model__ = [linear_model.SGDRegressor() for i in range(self.__ntargets__)] #Model for each target variable        
+        
+        #Update each target model based on the design
         for i in range(self.__ntargets__):
             self.__model__[i].partial_fit(X,y.values[:,i])
         
     def setCoefs(self,coefs=None):
+        #Set the coefficients to be used for prediction
+        
         if coefs is None:
             self.__coefs__ = np.array([reglin.coef_ for reglin in self.__model__])
         else:
             self.__coefs__ = coefs
              
     def predict(self,X):
+        #Calculate the coefficients if needed
         if self.__coefs__ is None:
             self.setCoefs()
-        coefs = self.coefs()
+        x,_ = X.shape
+        prediction = np.zeros([x,self.__ntargets__])
+        
+        #Iterate each model and get prediction for each target
         for i in range(self.__ntargets__):
-                model = self.__model__[i]
-                model.coef_ = coefs[i,:]
-
+            model = self.__model__[i]
+            prediction[:,i] = model.predict(X)
+        return prediction
+    
 class GridRegression:
-    #Help with regression over grid data
-    #Note that this class does not represent the design matrix explicitly but will instead calculate 
-    #it additively based on single events. 
+    #Easy class for regression of grid data
     
     #Private
     __noise__ = None
@@ -190,7 +220,7 @@ class GridRegression:
 
     def event_design(self,event,encoding=None,prevCode=None,longest=None):
         #Generates the design matrix for an event
-        #encoding - class that returns the encoding of a given event
+        #encoding - class that returns the encoding of a given event as a series {topicNumber:probability}
         #prevCode - is design is dependent on a previous state then pass it here       
         #longest - longest event in seconds
         
@@ -216,21 +246,21 @@ class GridRegression:
 
         times = grid.event_times(event)[:longest] #Get the event times (limited to the maximum event length)
         logger.debug('Event size : %d'%(len(times)))
-        noise = self.noise().ix[times]
+        noise = self.noise().ix[times] #Get the corresponding noise values for the times of this event
         design = np.zeros([len(times),npoints+noise.shape[1]])
-        eventEncoding = encoding[event]
+        eventEncoding = encoding[event].values #Specifies the encoding for this class (without lags)
         
         
         for i,time in enumerate(times.values):
             design[i,:] = np.hstack((np.zeros([npoints]),noise.ix[time]))
-            design[i,classCols] = eventEncoding
-            design[i,lagCols] = prevCode[lagCols-1]
+            design[i,classCols] = eventEncoding #Put the encoding in the t=0 lag columns
+            design[i,lagCols] = prevCode[lagCols-1] #Set the lag columns
             design = design
             prevCode = design[i,:]
         return pd.DataFrame(design,index=times)
             
     def genX(self,events):
-        #Generates the event matrix for events (in memory)       
+        #Generates the event matrix for events (in memory). Use with caution!     
         from tempfile import mkdtemp
         import os.path as path
                        
@@ -261,7 +291,6 @@ class GridRegression:
     
     def __iterX__(self,events):      
         #Generator for event matrix blocks
-        
         encoding = self.encoding()             
         longest=self.longestEvent()      
         nClasses = encoding.numClasses()       
@@ -276,19 +305,19 @@ class GridRegression:
             event = events.iloc[i]
             times = grid.event_times(event)[:longest] #Get the event times (limited to the maximum event length)
             logger.debug('Event size : %d'%(len(times)))
-            noise = self.noise().ix[times]
-            design = np.zeros([len(times),npoints+noise.shape[1]])
-            eventEncoding = encoding[event]
+            noise = self.noise().ix[times] #Get the noise corresponding to this event
+            design = np.zeros([len(times),npoints+noise.shape[1]]) #Allocate memory for the design
+            eventEncoding = encoding[event].values #Get the event encoding
             for i,time in enumerate(times.values):
-                design[i,:] = np.hstack((np.zeros([npoints]),noise.ix[time]))
-                design[i,classCols] = eventEncoding
-                design[i,lagCols] = prevCode[lagCols-1] 
+                design[i,:] = np.hstack((np.zeros([npoints]),noise.ix[time])) 
+                design[i,classCols] = eventEncoding #Set the t=0 lag columns
+                design[i,lagCols] = prevCode[lagCols-1]  #Set the lags
                 prevCode = design[i,:]
             yield design,times
             
+    ################Normalisation functions##################
     def meanDesign(self,events):
         #Calculates the mean on columns of the full events matrix
-        
         logger.info('Calculating design mean')
         designMean = np.zeros(self.nPoints())
         design = self.__iterX__(events)
@@ -331,7 +360,10 @@ class GridRegression:
             designVar += np.sum((X[:self.__longestEvent__]-mean)**2,axis=0)
             N += len(times)
         return designVar / (N-1)
-           
+    
+    
+    ###########Training functions###################
+    
     def online_train(self,events,y,encoding=None,longest=None,normalise=None,model='SGD'):
         #Online training of regression over events 
         #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
@@ -368,11 +400,12 @@ class GridRegression:
         
         t= np.array([])
         
+        #Generate the design for each event
         for j,(X,times) in enumerate(design):
             logger.info('Training event %d'%(j+1))
-            X_block = self.__normFunc__(X) if normalise else X
-            X_block[np.isnan(X_block)] = 0
-            self.__model__.partial_fit(X_block,y.ix[times])
+            X_block = self.__normFunc__(X) if normalise else X #Normalise if needed
+            X_block[np.isnan(X_block)] = 0 #Replace any nans from normalisation with 0 (e.g var=0 causes this)
+            self.__model__.partial_fit(X_block,y.ix[times]) #Fit this event to the model
             t = np.concatenate((t,times))
         return self.__model__.coefs()
     
@@ -388,11 +421,12 @@ class GridRegression:
         predictTimes = grid.eventsTimes(events,limit=self.longestEvent()/grid.fs())
         prediction = pd.DataFrame(np.zeros([len(predictTimes),ntargets]),index=predictTimes,columns=grid.wc())
         
+        #Generate design for each event
         for j,(X,times) in enumerate(design):
             logger.info('Predicting event %d'%(j+1))
-            X_block = self.__normFunc__(X) if self.__normFunc__ else X
+            X_block = self.__normFunc__(X) if self.__normFunc__ else X #Normalise if needed
             X_block[np.isnan(X_block)] = 0
-            prediction = self.__model__.predict(X_block)
-            prediction[times] = model.predict(X_block)  
+            prediction = self.__model__.predict(X_block) #Predict this event
+            prediction.ix[times] = self.__model__.predict(X_block)#Concatenate this event prediction to what we have so far
                       
         return prediction 
