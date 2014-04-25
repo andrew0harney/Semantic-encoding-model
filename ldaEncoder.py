@@ -1,5 +1,6 @@
 from gensim import corpora, models
 import numpy as np
+import pandas as pd
 
 #Utility class to encode an event for a given LDA model
 class LdaEncoder:
@@ -28,8 +29,8 @@ class LdaEncoder:
             if stimName >= 0:
                 stimWords = self.__docs__[stimName] #Get the labels for the given stimulus
                 topicProbs= self.model().__getitem__(self.__ldaDict__.doc2bow([word for word in stimWords if word in self.__modelWordList__]),eps=n) #Get the topic encoding
-                #return np.array([tprob for (_,tprob) in topicProbs]) #Get the topic probabilities
-                return topicProbs
+                #return np.array() #Get the topic probabilities
+                return pd.Series([tprob for (_,tprob) in topicProbs],index=[topicNum for (topicNum,_)in topicProbs])
             else: #If it is an isi
                 return np.zeros([self.model().num_topics])
             #
