@@ -3,12 +3,29 @@ import re
 import pickle
 import numpy as np
 import pandas as pd
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('__ldaUtils__')
 
 #Creates labeled dictionary of corpora for referencing
+#Sample running:
+#INFO:__ldaUtils__:Processing .../labeled_image_maps/003770.labels.txt
+#INFO:__ldaUtils__:Processing .../labeled_image_maps/003771.labels.txt
+#INFO:__ldaUtils__:Processing .../labeled_image_maps/003772.labels.txt
+#Sample output:
+#{3770: ['man', 'bull', 'people', 'stadium', 'dirt'],
+#3771: ['grass', 'sky', 'trees', 'village'],
+#3772: ['seal', 'rocks']}
 def createLabeledCorpDict(labeledImageDictionaryName,sourceReg,output=None):
-    if glob.glob(labeledImageDictionaryName):
+    #labeledImageDictionaryName - Name for the dictionary
+    #sourceReg - regular expression to find labelled image files
+    #Output - pickle the dictionary {true,false}
+    
+    if not glob.glob(labeledImageDictionaryName):
         docs = dict()
-        for tFile in glob.glob(sourceReg): 
+        for tFile in glob.glob(sourceReg):
+            logger.info('Processing '+str(tFile))
             a =open(tFile).read().splitlines()
             doc=[]
             for line in a:
@@ -22,10 +39,10 @@ def createLabeledCorpDict(labeledImageDictionaryName,sourceReg,output=None):
             docs[int(re.findall('[0-9]+', tFile)[0])] = list(set(doc))
             
         if output is not None:
-            pickle.dump(docs, output)
+            pickle.dump(docs, file(labeledImageDictionaryName,'w'))
         return docs
-
-
+    else:
+        return pickle.load(file(labeledImageDictionaryName,'r'))
 
 #Utility class to encode an event for a given LDA model
 class LdaEncoder:
