@@ -21,14 +21,15 @@ class LdaEncoder:
         def numClasses(self):
             return self.__numClasses__
         #
-        def __getitem__(self,event):
+        def __getitem__(self,event,n=0):
             #Get stim fname
             stimName = event['label']
             #If it is a stimulus period
             if stimName >= 0:
                 stimWords = self.__docs__[stimName] #Get the labels for the given stimulus
-                topicProbs= self.model().__getitem__(self.__ldaDict__.doc2bow([word for word in stimWords if word in self.__modelWordList__]),eps=0) #Get the topic encoding
-                return np.array([tprob for (_,tprob) in topicProbs]) #Get the topic probabilities
+                topicProbs= self.model().__getitem__(self.__ldaDict__.doc2bow([word for word in stimWords if word in self.__modelWordList__]),eps=n) #Get the topic encoding
+                #return np.array([tprob for (_,tprob) in topicProbs]) #Get the topic probabilities
+                return topicProbs
             else: #If it is an isi
                 return np.zeros([self.model().num_topics])
             #
