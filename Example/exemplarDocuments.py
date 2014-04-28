@@ -1,15 +1,14 @@
-from ldaUtils import LdaEncoder,LdaEncoding
+from ldaUtils import LdaEncoder,LdaEncoding,createLabeledCorpDict
 import numpy as np
-from ldaUtils import createLabeledCorpDict
 from gensim import models
 import pickle
 import heapq
 
-#Andrew O'Harney 17/03/14
+#Andrew O'Harney 28/04/14
 #Produce nExemplars for each of the topic models (Ordered by probability of belonging to a topic)
 
 nExemplars = 10
-labeledDocuments = 'allDocuments'
+labeledDocuments = '.../allDocuments'
 imgaeSourceReg = '.../*.labels.txt'
 
 #Load documents to be examined
