@@ -69,29 +69,6 @@ def createLabeledCorpDict(labeledImageDictionaryName,sourceReg,output=None):
     else:
         return pickle.load(file(labeledImageDictionaryName,'r'))
 
-#
-def findExempars(lda,ldaDict,docs,nExemplars):
-    fnames = docs.keys()
-    
-    ldaEncoder = LdaEncoder(ldaDict,docs,lda)    
-    #Probability encoding of each documents
-    encoding = []
-    #Encode each of the files
-    for fname in fnames:
-        encoding.append(LdaEncoding(fname,ldaEncoder[{'label':fname}]))
-    
-    exemplars = []
-    #Output the topic nExemplars for each topic
-    #outf = file(modelDir+modelName+'exemplars','w')
-    for i in range(lda.ntopics()):
-        print 'Fininding exempalars for topic '+str(i)
-        [e.setTopicN(i) for e in encoding]
-        exemplars.append(heapq.nlargest(nExemplars,encoding))
-        #outf.write('Topic %d\n%s\n'%(i,'_'*10))
-        #outf.write(str([exemplar.__str__(topicN=i) for exemplar in exemplars])+'\n\n')
-    #outf.close()
-    return exemplars    
-
 #Utility class to encode an event for a given LDA model
 class LdaEncoder:
         #
@@ -124,6 +101,8 @@ class LdaEncoder:
             else: #If it is an isi
                 return np.zeros([self.model().num_topics])
             #
+        def get_docs(self):
+            self.__docs__
         def get_code(self,event):
             return self.__getitem__(event)
         def model(self):
