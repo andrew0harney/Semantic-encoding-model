@@ -4,9 +4,33 @@ import pickle
 import numpy as np
 import pandas as pd
 import logging
+import ntpath
+import heapq
+from gensim import models
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('__ldaUtils__')
+
+
+#Utility class to store the output of encodings
+class LdaEncoding:
+    name = None
+    values = None
+    topicN = None
+    def __init__(self,name,values,topicN=0):
+        self.name = name
+        self.values = values
+        self.topicN = topicN 
+    def __cmp__(self,y,topicN=None):
+        if topicN is None:
+            topicN = self.topicN 
+        return np.sign(self.values[topicN]-y.values[topicN])
+    def __getitem__(self,topicN):
+        return self.values[topicN]
+    def __str__(self,topicN=None):
+        return self.name if topicN is None else self.name + ' ' + str(self.values[topicN]) 
+    def setTopicN(self,topicN):
+        self.topicN = topicN
 
 #Creates labeled dictionary of corpora for referencing
 #Sample running:
@@ -36,13 +60,37 @@ def createLabeledCorpDict(labeledImageDictionaryName,sourceReg,output=None):
                 else:
                     item = line[0].lower()
                 doc.append(item)
-            docs[int(re.findall('[0-9]+', tFile)[0])] = list(set(doc))
+            #docs[int(re.findall('[0-9]+', tFile)[0])] = list(set(doc))
+            docs[ntpath.basename(tFile)] = list(set(doc))
             
         if output is not None:
             pickle.dump(docs, file(labeledImageDictionaryName,'w'))
         return docs
     else:
         return pickle.load(file(labeledImageDictionaryName,'r'))
+
+#
+def findExempars(lda,ldaDict,docs,nExemplars):
+    fnames = docs.keys()
+    
+    ldaEncoder = LdaEncoder(ldaDict,docs,lda)    
+    #Probability encoding of each documents
+    encoding = []
+    #Encode each of the files
+    for fname in fnames:
+        encoding.append(LdaEncoding(fname,ldaEncoder[{'label':fname}]))
+    
+    exemplars = []
+    #Output the topic nExemplars for each topic
+    #outf = file(modelDir+modelName+'exemplars','w')
+    for i in range(lda.ntopics()):
+        print 'Fininding exempalars for topic '+str(i)
+        [e.setTopicN(i) for e in encoding]
+        exemplars.append(heapq.nlargest(nExemplars,encoding))
+        #outf.write('Topic %d\n%s\n'%(i,'_'*10))
+        #outf.write(str([exemplar.__str__(topicN=i) for exemplar in exemplars])+'\n\n')
+    #outf.close()
+    return exemplars    
 
 #Utility class to encode an event for a given LDA model
 class LdaEncoder:
@@ -64,13 +112,13 @@ class LdaEncoder:
         def numClasses(self):
             return self.__numClasses__
         #
-        def __getitem__(self,event):
+        def __getitem__(self,event,eps=0):
             #Get stim fname
             stimName = event['label']
             #If it is a stimulus period
             if stimName >= 0:
                 stimWords = self.__docs__[stimName] #Get the labels for the given stimulus
-                topicProbs= self.model().__getitem__(self.__ldaDict__.doc2bow([word for word in stimWords if word in self.__modelWordList__]),eps=0) #Get the topic encoding
+                topicProbs= self.model().__getitem__(self.__ldaDict__.doc2bow([word for word in stimWords if word in self.__modelWordList__]),eps=eps) #Get the topic encoding
                 #Series with {topicNum:prob} structure
                 return pd.Series([tprob for (_,tprob) in topicProbs],index=[topicNum for (topicNum,_)in topicProbs])
             else: #If it is an isi
