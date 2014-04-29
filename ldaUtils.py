@@ -7,6 +7,7 @@ import logging
 import ntpath
 import heapq
 from gensim import models
+from GridRegression import Encoder
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('__ldaUtils__')
@@ -57,11 +58,11 @@ def createLabeledCorpDict(labeledImageDictionaryName,sourceReg,output=None):
                 if len(line)>1:
                     for item in line:
                         item = item.lower()
-                else:
+                elif line != []:
                     item = line[0].lower()
                 doc.append(item)
-            #docs[int(re.findall('[0-9]+', tFile)[0])] = list(set(doc))
-            docs[ntpath.basename(tFile)] = list(set(doc))
+            docs[int(re.findall('[0-9]+', tFile)[0])] = list(set(doc))
+            #docs[ntpath.basename(tFile)] = list(set(doc))
             
         if output is not None:
             pickle.dump(docs, file(labeledImageDictionaryName,'w'))
@@ -69,8 +70,12 @@ def createLabeledCorpDict(labeledImageDictionaryName,sourceReg,output=None):
     else:
         return pickle.load(file(labeledImageDictionaryName,'r'))
 
+
+
+    
+    
 #Utility class to encode an event for a given LDA model
-class LdaEncoder:
+class LdaEncoder(Encoder):
         #
         __ldaDict__ = None
         __ldaModel__= None
@@ -100,10 +105,3 @@ class LdaEncoder:
                 return pd.Series([tprob for (_,tprob) in topicProbs],index=[topicNum for (topicNum,_)in topicProbs])
             else: #If it is an isi
                 return np.zeros([self.model().num_topics])
-            #
-        def get_docs(self):
-            self.__docs__
-        def get_code(self,event):
-            return self.__getitem__(event)
-        def model(self):
-            return self.__ldaModel__
