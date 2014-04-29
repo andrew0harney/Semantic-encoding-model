@@ -3,6 +3,7 @@ import pandas as pd
 from numpy.polynomial import Legendre
 import logging
 from sklearn import linear_model
+from abc import ABCMeta, abstractmethod
 
 
 logging.basicConfig(level=logging.INFO)
@@ -11,20 +12,23 @@ logger = logging.getLogger('__GridRegression__')
     
 #Online regression classes
 
-#Base model class for all online Regression methods to be extended from
+#Base model class for all online Regression methods
 class model():
+    __metaclass__ = ABCMeta
     __coefs__ = None
-
+    
     def coefs(self):
         if self.__coefs__ is None:
             self.setCoefs()
         return self.__coefs__    
 
     #Set the coefficients to use for prediction
+    @abstractmethod
     def setCoefs(self,coefs):
         pass
     
     #Add training example(s) to model
+    @abstractmethod
     def partial_fit(self,X,y):
         pass
     
@@ -34,7 +38,7 @@ class model():
 
 #Naive linear regression
 #Is based on online updates 
-class onlineLinearRegression(model):
+class OnlineLinearRegression(model):
     
     __R__ = None #(X^t)y
     __cov__ = None #(X^t)X
@@ -61,8 +65,18 @@ class onlineLinearRegression(model):
             self.setCoefs()
         return np.dot(self.__coefs__,X)
 
+#Abstraction for providing encoding for an event
+class Encoder():
+    __metaclass__ =  ABCMeta
+    @abstractmethod
+    def __getitem__(self,event,eps=0):
+        pass
+    @abstractmethod
+    def numClasses(self):
+        pass
+    
 #Performs Stochastic gradient descent for linear regression
-class onlineSGDRegression(model):
+class OnlineSGDRegression(model):
     
     __model__ = None #List of models (note scikits only allows one target per model)
     __ntargets__ = None #Number of targets
@@ -129,14 +143,14 @@ class GridRegression:
     __normFunc__ = None
     __model__ = None           
     
-    def __init__(self,grid,nlags=0,noiseOrders=None,encoding=None):
+    def __init__(self,model,grid,nlags=0,noiseOrders=None,encoding=None):
         self.setNumLags(nlags)
         self.setGrid(grid)
         self.setNoiseOrders(noiseOrders)
         self.setEncoding(encoding)
         self.setnClasses(encoding.numClasses())
         self.setnPoints(self.nlags()*self.nClasses()+self.nClasses()+len(self.noise().columns)) #Number of columns in design matrix
-
+        self.setModel(model)
     #Getters
     def grid(self):
         return self.__grid__
@@ -162,6 +176,8 @@ class GridRegression:
     def encoding(self):
         #Encoding matrix for gesign
         return self.__encoding__
+    def model(self):
+        return self.__model__
     def alphaH(self):
         return self.coefs()[:,:-self.noise().shape[1]]
     def betaH(self):
@@ -190,6 +206,8 @@ class GridRegression:
         self.__nlags__ = numLags
     def setLambda(self,lmbda):
         self.__lambda__ = lmbda
+    def setModel(self,model):
+        self.__model__ = model
     def setNoiseOrders(self,noiseOrders):
         logger.info( 'Setting polynomial orders for noise matrix')
         #Set maximum order of noise and update the matrix
@@ -363,21 +381,20 @@ class GridRegression:
     
     
     ###########Training functions###################
-    
-    def online_train(self,events,y,encoding=None,longest=None,normalise=None,model='SGD'):
+    def train(self,events,y,encoding=None,longest=None,normalise=None):
         #Online training of regression over events 
         #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
         #Encoding - dictionary that has row encodings for a given label(not including lags)
         #Normalisation - Normalisation coefficients to apply to columns of the design {zscore,l1,l2}
         #Model - type of model to use {linear,SGD}
+        model = self.model()
         if longest is not None:
             self.setLongestEvent(longest)
         if encoding is not None:
             self.setEncoding(encoding)
-        if model == 'linear':
-            self.__model__ = onlineLinearRegression()
-        elif model == 'SGD':
-            self.__model__ = onlineSGDRegression()
+        if model is None:
+            logger.info('Must specify a model type')
+            return
         if normalise is not None:
             designMean = self.meanDesign(events)
             if normalise == 'zscore':
@@ -409,7 +426,7 @@ class GridRegression:
             t = np.concatenate((t,times))
         return self.__model__.coefs()
     
-    def online_predict(self,events,coefs=None):
+    def predict(self,events,coefs=None):
         
         if coefs is None:
             coefs= self.coefs()
@@ -426,7 +443,6 @@ class GridRegression:
             logger.info('Predicting event %d'%(j+1))
             X_block = self.__normFunc__(X) if self.__normFunc__ else X #Normalise if needed
             X_block[np.isnan(X_block)] = 0
-            prediction = self.__model__.predict(X_block) #Predict this event
             prediction.ix[times] = self.__model__.predict(X_block)#Concatenate this event prediction to what we have so far
                       
         return prediction 
