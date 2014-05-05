@@ -45,16 +45,24 @@ class OnlineLinearRegression(model):
     
     def partial_fit(self,X,y):
         #Update for these values
+        if self.__cov__ is None:
+            _,b = X.shape
+            self.__cov__ = np.zeros([b,b])
+        if self.__R__ is None:
+            _,a = X.shape
+            _,d = y.shape
+            self.__R__ = np.zeros([a,d])
+        
         self.__coefs__ = None
-        self.__cov__ += np.dot(X,X.T)
-        self.__R__ += np.dot(X,y.values)
+        self.__cov__ += np.dot(X.T,X)
+        self.__R__ += np.dot(X.T,y.values)
     
     def setCoefs(self,coefs=None):
         #Will either take supplied coefficients to be used for prediction or will calculate them
         
         if coefs is None:
-            #Very *naive* method for calculating parameters - use with care!
-            self.__coefs__ = np.dot(np.invert(self.__cov__),self.__R__)
+            #Very *naive* method for calculating parameters - use with care! (This is temp and needs to be reviewed)
+            self.__coefs__ = np.dot(np.linalg.pinv(self.__cov__),self.__R__).T
         else:
             self.__coefs__ = coefs
         
@@ -63,7 +71,7 @@ class OnlineLinearRegression(model):
     
         if self.__coefs__ is None:
             self.setCoefs()
-        return np.dot(self.__coefs__,X)
+        return np.dot(self.__coefs__.T,X.T).T
 
 #Abstraction for providing encoding for an event
 class Encoder():
@@ -427,10 +435,11 @@ class GridRegression:
         return self.__model__.coefs()
     
     def predict(self,events,coefs=None):
-        
+
         if coefs is None:
             coefs= self.coefs()
-        
+        self.setCoefs(coefs)
+    
         logger.info('Predicting events')
         design = self.__iterX__(events)
         ntargets = len(self.grid().wc())
