@@ -25,6 +25,8 @@ Files:
 ---------------------------------
 Notes:
 
+Need to check if numpy/scipy are configured to use BLAS/ATLAS libraries for optimised linear alg. 
+
 While some effort was made to keep this code general, it was ultimately written with a specific project in mind. Therefore it is not intended as a general release package, however, I hope it may provide some use and it should still be straightforward to adapt.
 
 
