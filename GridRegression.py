@@ -4,7 +4,7 @@ from numpy.polynomial import Legendre
 import logging
 from sklearn import linear_model
 from abc import ABCMeta, abstractmethod
-
+import pdb
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('__GridRegression__')
@@ -42,8 +42,12 @@ class OnlineLinearRegression(model):
     
     __R__ = None #(X^t)y
     __cov__ = None #(X^t)X
-    
+            
     def partial_fit(self,X,y):
+        
+        #Expand dimensions of vectors
+        if X.ndim < 2:
+            X = X[np.newaxis,:]
         #Update for these values
         if self.__cov__ is None:
             _,b = X.shape
@@ -52,17 +56,20 @@ class OnlineLinearRegression(model):
             _,a = X.shape
             _,d = y.shape
             self.__R__ = np.zeros([a,d])
-        
         self.__coefs__ = None
+        
+        #These dot operations need reviewed for efficiency with Numpy BLAS/ATLAS (is this being done efficiently?)
         self.__cov__ += np.dot(X.T,X)
-        self.__R__ += np.dot(X.T,y.values)
+        self.__R__ += np.dot(X.T,y)
     
-    def setCoefs(self,coefs=None):
+    def setCoefs(self,coefs=None,regParam=None):
         #Will either take supplied coefficients to be used for prediction or will calculate them
         
         if coefs is None:
             #Very *naive* method for calculating parameters - use with care! (This is temp and needs to be reviewed)
-            self.__coefs__ = np.dot(np.linalg.pinv(self.__cov__),self.__R__).T
+            self.__cov__ += np.diag(np.random.random(self.__cov__.shape[0])*1e-15) if regParam is None else np.eye(self.__cov__.shape[0])*regParam
+            self.__coefs__ = np.dot(np.linalg.inv(self.__cov__),self.__R__)
+            
         else:
             self.__coefs__ = coefs
         
@@ -71,7 +78,7 @@ class OnlineLinearRegression(model):
     
         if self.__coefs__ is None:
             self.setCoefs()
-        return np.dot(self.__coefs__.T,X.T).T
+        return np.dot(X,self.__coefs__)
 
 #Abstraction for providing encoding for an event
 class Encoder():
@@ -187,9 +194,9 @@ class GridRegression:
     def model(self):
         return self.__model__
     def alphaH(self):
-        return self.coefs()[:,:-self.noise().shape[1]]
+        return self.coefs()[:-self.noise().shape[1],:]
     def betaH(self):
-        return self.coefs()[:,self.noise().shape[1]:]
+        return self.coefs()[self.noise().shape[1]:,:]
     #Setters
     def setEvents(self,events):
         logger.info( 'Setting events')
@@ -317,28 +324,39 @@ class GridRegression:
     
     def __iterX__(self,events):      
         #Generator for event matrix blocks
+        
         encoding = self.encoding()             
         longest=self.longestEvent()      
+        
+        #Find useful indices
         nClasses = encoding.numClasses()       
         npoints = self.nlags()*nClasses+nClasses #Number of columns in design matrix
-
+        _,nNoisePoints = self.noise().shape
+        
         prevCode = np.zeros([npoints])
         classCols = np.arange(nClasses)*(self.nlags()+1)
         lagCols= np.array([ix for ix in np.arange(npoints) if ix%(self.nlags()+1)])
         grid = self.grid()
+        #design = np.zeros(npoints+nNoisePoints) #Allocate memory for the design
         
         for i in range(len(events)):
+            logger.info('Generating event %d design'%(i+1))
             event = events.iloc[i]
             times = grid.event_times(event)[:longest] #Get the event times (limited to the maximum event length)
             logger.debug('Event size : %d'%(len(times)))
             noise = self.noise().ix[times] #Get the noise corresponding to this event
-            design = np.zeros([len(times),npoints+noise.shape[1]]) #Allocate memory for the design
+            design = np.zeros([len(times),npoints+nNoisePoints]) #Allocate memory for the design
             eventEncoding = encoding[event].values #Get the event encoding
             for i,time in enumerate(times.values):
                 design[i,:] = np.hstack((np.zeros([npoints]),noise.ix[time])) 
                 design[i,classCols] = eventEncoding #Set the t=0 lag columns
                 design[i,lagCols] = prevCode[lagCols-1]  #Set the lags
                 prevCode = design[i,:]
+                #design[:] = 0
+                #design[npoints:]=noise.ix[time] 
+                #design[classCols] = eventEncoding #Set the t=0 lag columns
+                #design[lagCols] = prevCode[lagCols-1]
+                #prevCode = design
             yield design,times
             
     ################Normalisation functions##################
@@ -389,7 +407,7 @@ class GridRegression:
     
     
     ###########Training functions###################
-    def train(self,events,y,encoding=None,longest=None,normalise=None):
+    def train(self,events,y,encoding=None,longest=None,normalise='l2',ridge=False):
         #Online training of regression over events 
         #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
         #Encoding - dictionary that has row encodings for a given label(not including lags)
@@ -423,15 +441,11 @@ class GridRegression:
         logger.info('Training events')
         design = self.__iterX__(events)
         
-        t= np.array([])
-        
         #Generate the design for each event
         for j,(X,times) in enumerate(design):
-            logger.info('Training event %d'%(j+1))
             X_block = self.__normFunc__(X) if normalise else X #Normalise if needed
             X_block[np.isnan(X_block)] = 0 #Replace any nans from normalisation with 0 (e.g var=0 causes this)
             self.__model__.partial_fit(X_block,y.ix[times]) #Fit this event to the model
-            t = np.concatenate((t,times))
         return self.__model__.coefs()
     
     def predict(self,events,coefs=None):
@@ -449,9 +463,7 @@ class GridRegression:
         
         #Generate design for each event
         for j,(X,times) in enumerate(design):
-            logger.info('Predicting event %d'%(j+1))
             X_block = self.__normFunc__(X) if self.__normFunc__ else X #Normalise if needed
             X_block[np.isnan(X_block)] = 0
-            prediction.ix[times] = self.__model__.predict(X_block)#Concatenate this event prediction to what we have so far
-                      
+            prediction.ix[times]= self.__model__.predict(X_block)
         return prediction 
