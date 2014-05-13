@@ -2,22 +2,35 @@ import numpy as np
 import pandas as pd
 from numpy.polynomial import Legendre
 import logging
-from sklearn import linear_model
 from abc import ABCMeta, abstractmethod
 import pdb
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('__GridRegression__')
+  
+"""Classes for performing online regression over data"""
+__author__ =  'Andrew O\Harney'
 
+class Encoder():
+    """Abstraction for providing encoding for an event."""
     
-#Online regression classes
+    __metaclass__ =  ABCMeta
+    @abstractmethod
+    def __getitem__(self,event,eps=0):
+        pass
+    @abstractmethod
+    def numClasses(self):
+        "Return the number of classes(topics) in data"
+        pass
 
-#Base model class for all online Regression methods
+#
 class model():
+    """Base model class for all online Regression methods"""
     __metaclass__ = ABCMeta
     __coefs__ = None
     
     def coefs(self):
+        """Return coefficients in use by the model"""
         if self.__coefs__ is None:
             self.setCoefs()
         return self.__coefs__    
@@ -25,123 +38,32 @@ class model():
     #Set the coefficients to use for prediction
     @abstractmethod
     def setCoefs(self,coefs):
+        """Set the model parameters
+        
+        Keyword arguments:
+        coefs -- Trained model parameters"""
         pass
     
-    #Add training example(s) to model
     @abstractmethod
     def partial_fit(self,X,y):
+        """Add training example(s) to model
+        
+        Keyword arguments:
+        X -- Design matrix of event(s)
+        y -- Data for event(s)"""
         pass
     
-    #Predict output for X
+    @abstractmethod
     def predict(self,X):
+        """Predict output for event(s)
+        
+        Keyword arguments:
+        X -- Design matrix of event(s)"""
         pass
 
-#Naive linear regression
-#Is based on online updates 
-class OnlineLinearRegression(model):
-    
-    __R__ = None #(X^t)y
-    __cov__ = None #(X^t)X
-            
-    def partial_fit(self,X,y):
-        
-        #Expand dimensions of vectors
-        if X.ndim < 2:
-            X = X[np.newaxis,:]
-        #Update for these values
-        if self.__cov__ is None:
-            _,b = X.shape
-            self.__cov__ = np.zeros([b,b])
-        if self.__R__ is None:
-            _,a = X.shape
-            _,d = y.shape
-            self.__R__ = np.zeros([a,d])
-        self.__coefs__ = None
-        
-        #These dot operations need reviewed for efficiency with Numpy BLAS/ATLAS (is this being done efficiently?)
-        self.__cov__ += np.dot(X.T,X)
-        self.__R__ += np.dot(X.T,y)
-    
-    def setCoefs(self,coefs=None,regParam=None):
-        #Will either take supplied coefficients to be used for prediction or will calculate them
-        
-        if coefs is None:
-            #Very *naive* method for calculating parameters - use with care! (This is temp and needs to be reviewed)
-            self.__cov__ += np.diag(np.random.random(self.__cov__.shape[0])*1e-15) if regParam is None else np.eye(self.__cov__.shape[0])*regParam
-            self.__coefs__ = np.dot(np.linalg.inv(self.__cov__),self.__R__)
-            
-        else:
-            self.__coefs__ = coefs
-        
-    def predict(self,X):
-        #Predict the output for some design X
-    
-        if self.__coefs__ is None:
-            self.setCoefs()
-        return np.dot(X,self.__coefs__)
-
-#Abstraction for providing encoding for an event
-class Encoder():
-    __metaclass__ =  ABCMeta
-    @abstractmethod
-    def __getitem__(self,event,eps=0):
-        pass
-    @abstractmethod
-    def numClasses(self):
-        pass
-    
-#Performs Stochastic gradient descent for linear regression
-class OnlineSGDRegression(model):
-    
-    __model__ = None #List of models (note scikits only allows one target per model)
-    __ntargets__ = None #Number of targets
-    
-    def __init__(self):
-        self.__coefs__ = None
-    
-    def partial_fit(self,X,y):
-        thisNTargets = len(y.columns)
-        
-        #Sanity check on the number of targets
-        if self.__ntargets__ is None:
-            self.__ntargets__ = thisNTargets
-        else:
-            if self.__ntargets__ != thisNTargets:
-                logger.warn('Number of targets does not match!')
-                return
-        self.__coefs__ = None
-        
-        #Create models if we don't have them so far
-        if self.__model__ is None:
-            self.__model__ = [linear_model.SGDRegressor() for i in range(self.__ntargets__)] #Model for each target variable        
-        
-        #Update each target model based on the design
-        for i in range(self.__ntargets__):
-            self.__model__[i].partial_fit(X,y.values[:,i])
-        
-    def setCoefs(self,coefs=None):
-        #Set the coefficients to be used for prediction
-        
-        if coefs is None:
-            self.__coefs__ = np.array([reglin.coef_ for reglin in self.__model__])
-        else:
-            self.__coefs__ = coefs
-             
-    def predict(self,X):
-        #Calculate the coefficients if needed
-        if self.__coefs__ is None:
-            self.setCoefs()
-        x,_ = X.shape
-        prediction = np.zeros([x,self.__ntargets__])
-        
-        #Iterate each model and get prediction for each target
-        for i in range(self.__ntargets__):
-            model = self.__model__[i]
-            prediction[:,i] = model.predict(X)
-        return prediction
     
 class GridRegression:
-    #Easy class for regression of grid data
+    """Main class for encapsulated regression over data"""
     
     #Private
     __noise__ = None
@@ -407,12 +329,12 @@ class GridRegression:
     
     
     ###########Training functions###################
-    def train(self,events,y,encoding=None,longest=None,normalise='l2',ridge=False):
-        #Online training of regression over events 
-        #Longest - the maximum event time in seconds (useful for limiting feedback periods ect.)
-        #Encoding - dictionary that has row encodings for a given label(not including lags)
-        #Normalisation - Normalisation coefficients to apply to columns of the design {zscore,l1,l2}
-        #Model - type of model to use {linear,SGD}
+    def train(self,events,y,encoding=None,longest=None,normalise=None):
+        """Online training of regression over events 
+        Longest -- Maximum event time in seconds (useful for limiting feedback periods ect.)
+        Encoding -- Dictionary that has row encodings for a given label(not including lags)
+        Normalisation -- Normalisation coefficients to apply to columns of the design {zscore,l1,l2}
+        Model -- Type of model to use {linear,SGD}"""
         model = self.model()
         if longest is not None:
             self.setLongestEvent(longest)
@@ -442,6 +364,7 @@ class GridRegression:
         design = self.__iterX__(events)
         
         #Generate the design for each event
+        #self.__model__.train(design)
         for j,(X,times) in enumerate(design):
             X_block = self.__normFunc__(X) if normalise else X #Normalise if needed
             X_block[np.isnan(X_block)] = 0 #Replace any nans from normalisation with 0 (e.g var=0 causes this)
