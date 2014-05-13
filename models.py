@@ -17,7 +17,10 @@ class OnlineLinearRegression(model):
     __cov__ = None #(X^t)X
             
     def partial_fit(self,X,y):
-        
+        """Update model with event(s)
+        Keyword Arguments:
+        X-Design to update with
+        y-Corresponding data"""
         #Expand dimensions of vectors
         if X.ndim < 2:
             X = X[np.newaxis,:]
@@ -36,7 +39,10 @@ class OnlineLinearRegression(model):
         self.__R__ += np.dot(X.T,y)
        
     def setCoefs(self,coefs=None,regParam=None):
-        
+        """Set weighting coefficients
+        Keyword Arguments:
+        coefs=None - Coefficient matrix (default is inferred parameters)
+        regParam=None - Parameter (lambda) to perform regularisation with"""
         if coefs is None:
             #Very *naive* method for calculating parameters - use with care! (This is temp and needs to be reviewed)
             self.__cov__ += np.diag(np.random.random(self.__cov__.shape[0])*1e-15) if regParam is None else np.eye(self.__cov__.shape[0])*regParam
@@ -67,6 +73,10 @@ class OnlineSGDRegression(model):
         self.__coefs__ = None
     
     def partial_fit(self,X,y):
+        """Update model with event(s)
+        Keyword Arguments:
+        X-Design to update with
+        y-Corresponding data"""
         thisNTargets = len(y.columns)
         
         #Sanity check on the number of targets
@@ -87,6 +97,10 @@ class OnlineSGDRegression(model):
             self.__model__[i].partial_fit(X,y.values[:,i])
         
     def setCoefs(self,coefs=None):
+        """Set weighting coefficients
+        Keyword Arguments:
+        coefs=None - Coefficient matrix (default is inferred parameters)
+        regParam=None - Parameter (lambda) to perform regularisation with"""
         #Set the coefficients to be used for prediction
         
         if coefs is None:
@@ -95,7 +109,11 @@ class OnlineSGDRegression(model):
             self.__coefs__ = coefs
              
     def predict(self,X):
-        #Calculate the coefficients if needed
+        """Generate prediction for event(s)
+        Keyword arguments:
+        X -- Design for some event(s)"""
+        
+        #Calculate coefs if needed
         if self.__coefs__ is None:
             self.setCoefs()
         x,_ = X.shape
@@ -109,7 +127,7 @@ class OnlineSGDRegression(model):
 
 
 class regLearner(model):
-    """Learner for performing regularisation with one of the base models"""
+    """Learner for performing regularisation with one of the base models. Base on folded test/validation sets"""
     __trainEvents__ = None
     __testEvents__ = None
     __model__ = None
@@ -119,11 +137,14 @@ class regLearner(model):
     __data__ = None
 
     def __init__(self,events,data,regs,model,trainPrcnt=75):
-        #Events - Full training events
-        #Regs - regularisation parameters to use
-        #Data - training data
-        #Model - Any model object to use as base
-        #TrainPrcnt - Percentage of training set to use for training each reg parameter (default 75%)
+        """
+        Keyword Arguments:
+        Events -- Full training events
+        #Regs -- Regularisation parameters to use
+        #Data -- Training data
+        #Model -- Any model object to use as base
+        #TrainPrcnt - Percentage of training set to use for training each reg parameter (default 75%)"""
+        
         self.__trainNum__ = len(events)*trainPrcnt/100.0
         self.__trainEvents__ = events[:self.__trainNum__]
         self.__testEvents__ = events[self.__trainNum__:]
@@ -133,26 +154,39 @@ class regLearner(model):
         self.__trainCount__ = 0
     
     def coefs(self):
-        #Return the coefficients currently in use
+        """Return coefficients in use"""
         return self.__model__.coefs() 
 
     
     def setCoefs(self,coefs):
-        #Set the coefficients to use for prediction
+        """Set the coefficients to use for prediction
+        Keyword Arguments:
+        coefs -- Weighting parameter matrix"""
         self.__model__.setCoefs(coefs)
     
     
     def partial_fit(self,X,y):
-        #Add training example(s) to model
+        """Update model with event(s)
+        Keyword Arguments:
+        X-Design to update with
+        y-Corresponding data"""
         self.__model__.partial_fit(X, y)
-        
-    def train(self):
+    
+    #Override the train function to allow for folded test/validation
+    def train(self,X,y,normFunc):
+        """Train model
+        Keyword arguments:
+        X -- Design matrix of event(s). Must be iterable
+        y -- Data to train on
+        normaliseFunc -- normalisation function"""
         pass
     
     def __regularise__(self):
         pass
     
     def predict(self,X):
-        #Predict output for X
+        """Generate prediction for event(s)
+        Keyword arguments:
+        X -- Design for some event(s)"""
         self.__model__.predict(X)
         
