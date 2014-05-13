@@ -1,0 +1,295 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module models</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>models</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andy/git/Semantic-encoding-model/models.py">/home/andy/git/Semantic-encoding-model/models.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="sklearn.linear_model.html">sklearn.linear_model</a><br>
+</td><td width="25%" valign=top><a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="GridRegression.html#model">GridRegression.model</a>(<a href="__builtin__.html#object">__builtin__.object</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="models.html#OnlineLinearRegression">OnlineLinearRegression</a>
+</font></dt><dt><font face="helvetica, arial"><a href="models.html#OnlineSGDRegression">OnlineSGDRegression</a>
+</font></dt><dt><font face="helvetica, arial"><a href="models.html#regLearner">regLearner</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="OnlineLinearRegression">class <strong>OnlineLinearRegression</strong></a>(<a href="GridRegression.html#model">GridRegression.model</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Naive&nbsp;linear&nbsp;regression<br>
+is&nbsp;based&nbsp;on&nbsp;online&nbsp;updates<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="models.html#OnlineLinearRegression">OnlineLinearRegression</a></dd>
+<dd><a href="GridRegression.html#model">GridRegression.model</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="OnlineLinearRegression-partial_fit"><strong>partial_fit</strong></a>(self, X, y)</dt><dd><tt>Update&nbsp;<a href="GridRegression.html#model">model</a>&nbsp;with&nbsp;event(s)<br>
+Keyword&nbsp;Arguments:<br>
+X-Design&nbsp;to&nbsp;update&nbsp;with<br>
+y-Corresponding&nbsp;data</tt></dd></dl>
+
+<dl><dt><a name="OnlineLinearRegression-predict"><strong>predict</strong></a>(self, X)</dt><dd><tt>Generate&nbsp;prediction&nbsp;for&nbsp;event(s)<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+X&nbsp;--&nbsp;Design&nbsp;for&nbsp;some&nbsp;event(s)</tt></dd></dl>
+
+<dl><dt><a name="OnlineLinearRegression-setCoefs"><strong>setCoefs</strong></a>(self, coefs<font color="#909090">=None</font>, regParam<font color="#909090">=None</font>)</dt><dd><tt>Set&nbsp;weighting&nbsp;coefficients<br>
+Keyword&nbsp;Arguments:<br>
+coefs=None&nbsp;-&nbsp;Coefficient&nbsp;matrix&nbsp;(default&nbsp;is&nbsp;inferred&nbsp;parameters)<br>
+regParam=None&nbsp;-&nbsp;Parameter&nbsp;(lambda)&nbsp;to&nbsp;perform&nbsp;regularisation&nbsp;with</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__R__</strong> = None</dl>
+
+<dl><dt><strong>__abstractmethods__</strong> = frozenset([])</dl>
+
+<dl><dt><strong>__cov__</strong> = None</dl>
+
+<hr>
+Methods inherited from <a href="GridRegression.html#model">GridRegression.model</a>:<br>
+<dl><dt><a name="OnlineLinearRegression-coefs"><strong>coefs</strong></a>(self)</dt><dd><tt>Return&nbsp;coefficients&nbsp;in&nbsp;use&nbsp;by&nbsp;the&nbsp;<a href="GridRegression.html#model">model</a></tt></dd></dl>
+
+<dl><dt><a name="OnlineLinearRegression-train"><strong>train</strong></a>(self, X, y, normFunc<font color="#909090">=None</font>)</dt><dd><tt>Train&nbsp;<a href="GridRegression.html#model">model</a><br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+X&nbsp;--&nbsp;Design&nbsp;matrix&nbsp;of&nbsp;event(s).&nbsp;Must&nbsp;be&nbsp;iterable<br>
+y&nbsp;--&nbsp;Data&nbsp;to&nbsp;train&nbsp;on<br>
+normaliseFunc&nbsp;--&nbsp;normalisation&nbsp;function</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="GridRegression.html#model">GridRegression.model</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="GridRegression.html#model">GridRegression.model</a>:<br>
+<dl><dt><strong>__coefs__</strong> = None</dl>
+
+<dl><dt><strong>__metaclass__</strong> = &lt;class 'abc.ABCMeta'&gt;<dd><tt>Metaclass&nbsp;for&nbsp;defining&nbsp;Abstract&nbsp;Base&nbsp;Classes&nbsp;(ABCs).<br>
+&nbsp;<br>
+Use&nbsp;this&nbsp;metaclass&nbsp;to&nbsp;create&nbsp;an&nbsp;ABC.&nbsp;&nbsp;An&nbsp;ABC&nbsp;can&nbsp;be&nbsp;subclassed<br>
+directly,&nbsp;and&nbsp;then&nbsp;acts&nbsp;as&nbsp;a&nbsp;mix-in&nbsp;class.&nbsp;&nbsp;You&nbsp;can&nbsp;also&nbsp;register<br>
+unrelated&nbsp;concrete&nbsp;classes&nbsp;(even&nbsp;built-in&nbsp;classes)&nbsp;and&nbsp;unrelated<br>
+ABCs&nbsp;as&nbsp;'virtual&nbsp;subclasses'&nbsp;--&nbsp;these&nbsp;and&nbsp;their&nbsp;descendants&nbsp;will<br>
+be&nbsp;considered&nbsp;subclasses&nbsp;of&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;by&nbsp;the&nbsp;built-in<br>
+issubclass()&nbsp;function,&nbsp;but&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;won't&nbsp;show&nbsp;up&nbsp;in<br>
+their&nbsp;MRO&nbsp;(Method&nbsp;Resolution&nbsp;Order)&nbsp;nor&nbsp;will&nbsp;method<br>
+implementations&nbsp;defined&nbsp;by&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;be&nbsp;callable&nbsp;(not<br>
+even&nbsp;via&nbsp;super()).</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="OnlineSGDRegression">class <strong>OnlineSGDRegression</strong></a>(<a href="GridRegression.html#model">GridRegression.model</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Performs&nbsp;Stochastic&nbsp;gradient&nbsp;descent&nbsp;for&nbsp;linear&nbsp;regression.<br>
+Wraps&nbsp;around&nbsp;scikits-learn<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="models.html#OnlineSGDRegression">OnlineSGDRegression</a></dd>
+<dd><a href="GridRegression.html#model">GridRegression.model</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="OnlineSGDRegression-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="OnlineSGDRegression-partial_fit"><strong>partial_fit</strong></a>(self, X, y)</dt><dd><tt>Update&nbsp;<a href="GridRegression.html#model">model</a>&nbsp;with&nbsp;event(s)<br>
+Keyword&nbsp;Arguments:<br>
+X-Design&nbsp;to&nbsp;update&nbsp;with<br>
+y-Corresponding&nbsp;data</tt></dd></dl>
+
+<dl><dt><a name="OnlineSGDRegression-predict"><strong>predict</strong></a>(self, X)</dt><dd><tt>Generate&nbsp;prediction&nbsp;for&nbsp;event(s)<br>
+Keyword&nbsp;arguments:<br>
+X&nbsp;--&nbsp;Design&nbsp;for&nbsp;some&nbsp;event(s)</tt></dd></dl>
+
+<dl><dt><a name="OnlineSGDRegression-setCoefs"><strong>setCoefs</strong></a>(self, coefs<font color="#909090">=None</font>)</dt><dd><tt>Set&nbsp;weighting&nbsp;coefficients<br>
+Keyword&nbsp;Arguments:<br>
+coefs=None&nbsp;-&nbsp;Coefficient&nbsp;matrix&nbsp;(default&nbsp;is&nbsp;inferred&nbsp;parameters)<br>
+regParam=None&nbsp;-&nbsp;Parameter&nbsp;(lambda)&nbsp;to&nbsp;perform&nbsp;regularisation&nbsp;with</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset([])</dl>
+
+<dl><dt><strong>__model__</strong> = None</dl>
+
+<dl><dt><strong>__ntargets__</strong> = None</dl>
+
+<hr>
+Methods inherited from <a href="GridRegression.html#model">GridRegression.model</a>:<br>
+<dl><dt><a name="OnlineSGDRegression-coefs"><strong>coefs</strong></a>(self)</dt><dd><tt>Return&nbsp;coefficients&nbsp;in&nbsp;use&nbsp;by&nbsp;the&nbsp;<a href="GridRegression.html#model">model</a></tt></dd></dl>
+
+<dl><dt><a name="OnlineSGDRegression-train"><strong>train</strong></a>(self, X, y, normFunc<font color="#909090">=None</font>)</dt><dd><tt>Train&nbsp;<a href="GridRegression.html#model">model</a><br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+X&nbsp;--&nbsp;Design&nbsp;matrix&nbsp;of&nbsp;event(s).&nbsp;Must&nbsp;be&nbsp;iterable<br>
+y&nbsp;--&nbsp;Data&nbsp;to&nbsp;train&nbsp;on<br>
+normaliseFunc&nbsp;--&nbsp;normalisation&nbsp;function</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="GridRegression.html#model">GridRegression.model</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="GridRegression.html#model">GridRegression.model</a>:<br>
+<dl><dt><strong>__coefs__</strong> = None</dl>
+
+<dl><dt><strong>__metaclass__</strong> = &lt;class 'abc.ABCMeta'&gt;<dd><tt>Metaclass&nbsp;for&nbsp;defining&nbsp;Abstract&nbsp;Base&nbsp;Classes&nbsp;(ABCs).<br>
+&nbsp;<br>
+Use&nbsp;this&nbsp;metaclass&nbsp;to&nbsp;create&nbsp;an&nbsp;ABC.&nbsp;&nbsp;An&nbsp;ABC&nbsp;can&nbsp;be&nbsp;subclassed<br>
+directly,&nbsp;and&nbsp;then&nbsp;acts&nbsp;as&nbsp;a&nbsp;mix-in&nbsp;class.&nbsp;&nbsp;You&nbsp;can&nbsp;also&nbsp;register<br>
+unrelated&nbsp;concrete&nbsp;classes&nbsp;(even&nbsp;built-in&nbsp;classes)&nbsp;and&nbsp;unrelated<br>
+ABCs&nbsp;as&nbsp;'virtual&nbsp;subclasses'&nbsp;--&nbsp;these&nbsp;and&nbsp;their&nbsp;descendants&nbsp;will<br>
+be&nbsp;considered&nbsp;subclasses&nbsp;of&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;by&nbsp;the&nbsp;built-in<br>
+issubclass()&nbsp;function,&nbsp;but&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;won't&nbsp;show&nbsp;up&nbsp;in<br>
+their&nbsp;MRO&nbsp;(Method&nbsp;Resolution&nbsp;Order)&nbsp;nor&nbsp;will&nbsp;method<br>
+implementations&nbsp;defined&nbsp;by&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;be&nbsp;callable&nbsp;(not<br>
+even&nbsp;via&nbsp;super()).</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="regLearner">class <strong>regLearner</strong></a>(<a href="GridRegression.html#model">GridRegression.model</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Learner&nbsp;for&nbsp;performing&nbsp;regularisation&nbsp;with&nbsp;one&nbsp;of&nbsp;the&nbsp;base&nbsp;models.&nbsp;Base&nbsp;on&nbsp;folded&nbsp;test/validation&nbsp;sets<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="models.html#regLearner">regLearner</a></dd>
+<dd><a href="GridRegression.html#model">GridRegression.model</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="regLearner-__init__"><strong>__init__</strong></a>(self, events, data, regs, model, trainPrcnt<font color="#909090">=75</font>)</dt><dd><tt>Keyword&nbsp;Arguments:<br>
+Events&nbsp;--&nbsp;Full&nbsp;training&nbsp;events<br>
+#Regs&nbsp;--&nbsp;Regularisation&nbsp;parameters&nbsp;to&nbsp;use<br>
+#Data&nbsp;--&nbsp;Training&nbsp;data<br>
+#Model&nbsp;--&nbsp;Any&nbsp;<a href="GridRegression.html#model">model</a>&nbsp;object&nbsp;to&nbsp;use&nbsp;as&nbsp;base<br>
+#TrainPrcnt&nbsp;-&nbsp;Percentage&nbsp;of&nbsp;training&nbsp;set&nbsp;to&nbsp;use&nbsp;for&nbsp;training&nbsp;each&nbsp;reg&nbsp;parameter&nbsp;(default&nbsp;75%)</tt></dd></dl>
+
+<dl><dt><a name="regLearner-__regularise__"><strong>__regularise__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="regLearner-coefs"><strong>coefs</strong></a>(self)</dt><dd><tt>Return&nbsp;coefficients&nbsp;in&nbsp;use</tt></dd></dl>
+
+<dl><dt><a name="regLearner-partial_fit"><strong>partial_fit</strong></a>(self, X, y)</dt><dd><tt>Update&nbsp;<a href="GridRegression.html#model">model</a>&nbsp;with&nbsp;event(s)<br>
+Keyword&nbsp;Arguments:<br>
+X-Design&nbsp;to&nbsp;update&nbsp;with<br>
+y-Corresponding&nbsp;data</tt></dd></dl>
+
+<dl><dt><a name="regLearner-predict"><strong>predict</strong></a>(self, X)</dt><dd><tt>Generate&nbsp;prediction&nbsp;for&nbsp;event(s)<br>
+Keyword&nbsp;arguments:<br>
+X&nbsp;--&nbsp;Design&nbsp;for&nbsp;some&nbsp;event(s)</tt></dd></dl>
+
+<dl><dt><a name="regLearner-setCoefs"><strong>setCoefs</strong></a>(self, coefs)</dt><dd><tt>Set&nbsp;the&nbsp;coefficients&nbsp;to&nbsp;use&nbsp;for&nbsp;prediction<br>
+Keyword&nbsp;Arguments:<br>
+coefs&nbsp;--&nbsp;Weighting&nbsp;parameter&nbsp;matrix</tt></dd></dl>
+
+<dl><dt><a name="regLearner-train"><strong>train</strong></a>(self, X, y, normFunc)</dt><dd><tt>Train&nbsp;<a href="GridRegression.html#model">model</a><br>
+Keyword&nbsp;arguments:<br>
+X&nbsp;--&nbsp;Design&nbsp;matrix&nbsp;of&nbsp;event(s).&nbsp;Must&nbsp;be&nbsp;iterable<br>
+y&nbsp;--&nbsp;Data&nbsp;to&nbsp;train&nbsp;on<br>
+normaliseFunc&nbsp;--&nbsp;normalisation&nbsp;function</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset([])</dl>
+
+<dl><dt><strong>__data__</strong> = None</dl>
+
+<dl><dt><strong>__model__</strong> = None</dl>
+
+<dl><dt><strong>__regs__</strong> = None</dl>
+
+<dl><dt><strong>__testEvents__</strong> = None</dl>
+
+<dl><dt><strong>__trainCount__</strong> = None</dl>
+
+<dl><dt><strong>__trainEvents__</strong> = None</dl>
+
+<dl><dt><strong>__trainNum__</strong> = None</dl>
+
+<hr>
+Data descriptors inherited from <a href="GridRegression.html#model">GridRegression.model</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="GridRegression.html#model">GridRegression.model</a>:<br>
+<dl><dt><strong>__coefs__</strong> = None</dl>
+
+<dl><dt><strong>__metaclass__</strong> = &lt;class 'abc.ABCMeta'&gt;<dd><tt>Metaclass&nbsp;for&nbsp;defining&nbsp;Abstract&nbsp;Base&nbsp;Classes&nbsp;(ABCs).<br>
+&nbsp;<br>
+Use&nbsp;this&nbsp;metaclass&nbsp;to&nbsp;create&nbsp;an&nbsp;ABC.&nbsp;&nbsp;An&nbsp;ABC&nbsp;can&nbsp;be&nbsp;subclassed<br>
+directly,&nbsp;and&nbsp;then&nbsp;acts&nbsp;as&nbsp;a&nbsp;mix-in&nbsp;class.&nbsp;&nbsp;You&nbsp;can&nbsp;also&nbsp;register<br>
+unrelated&nbsp;concrete&nbsp;classes&nbsp;(even&nbsp;built-in&nbsp;classes)&nbsp;and&nbsp;unrelated<br>
+ABCs&nbsp;as&nbsp;'virtual&nbsp;subclasses'&nbsp;--&nbsp;these&nbsp;and&nbsp;their&nbsp;descendants&nbsp;will<br>
+be&nbsp;considered&nbsp;subclasses&nbsp;of&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;by&nbsp;the&nbsp;built-in<br>
+issubclass()&nbsp;function,&nbsp;but&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;won't&nbsp;show&nbsp;up&nbsp;in<br>
+their&nbsp;MRO&nbsp;(Method&nbsp;Resolution&nbsp;Order)&nbsp;nor&nbsp;will&nbsp;method<br>
+implementations&nbsp;defined&nbsp;by&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;be&nbsp;callable&nbsp;(not<br>
+even&nbsp;via&nbsp;super()).</tt></dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__author__</strong> = "Andrew O'Harney"<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#7799ee">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Author</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#7799ee"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Andrew&nbsp;O'Harney</td></tr></table>
+</body></html>
