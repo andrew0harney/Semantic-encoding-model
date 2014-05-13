@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from numpy.polynomial import Legendre
-from andyClasses.gridUtils import *
+from gridUtils import *
 import logging
 from abc import ABCMeta, abstractmethod
 import pdb
