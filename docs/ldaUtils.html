@@ -1,0 +1,167 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module ldaUtils</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>ldaUtils</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andy/git/Semantic-encoding-model/ldaUtils.py">/home/andy/git/Semantic-encoding-model/ldaUtils.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="glob.html">glob</a><br>
+<a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="pandas.html">pandas</a><br>
+</td><td width="25%" valign=top><a href="pickle.html">pickle</a><br>
+<a href="re.html">re</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="GridRegression.html#Encoder">GridRegression.Encoder</a>(<a href="__builtin__.html#object">__builtin__.object</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="ldaUtils.html#LdaEncoder">LdaEncoder</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="ldaUtils.html#LdaEncoding">LdaEncoding</a>
+</font></dt></dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="LdaEncoder">class <strong>LdaEncoder</strong></a>(<a href="GridRegression.html#Encoder">GridRegression.Encoder</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;to&nbsp;encapsulate&nbsp;encoding&nbsp;of&nbsp;an&nbsp;event&nbsp;for&nbsp;a&nbsp;given&nbsp;LDA&nbsp;model<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="ldaUtils.html#LdaEncoder">LdaEncoder</a></dd>
+<dd><a href="GridRegression.html#Encoder">GridRegression.Encoder</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="LdaEncoder-__getitem__"><strong>__getitem__</strong></a>(self, event, eps<font color="#909090">=0</font>)</dt></dl>
+
+<dl><dt><a name="LdaEncoder-__init__"><strong>__init__</strong></a>(self, ldaDict, docs, lda)</dt></dl>
+
+<dl><dt><a name="LdaEncoder-numClasses"><strong>numClasses</strong></a>(self)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset([])</dl>
+
+<dl><dt><strong>__docs__</strong> = None</dl>
+
+<dl><dt><strong>__ldaDict__</strong> = None</dl>
+
+<dl><dt><strong>__ldaModel__</strong> = None</dl>
+
+<dl><dt><strong>__modelWordList__</strong> = None</dl>
+
+<dl><dt><strong>__numClasses__</strong> = None</dl>
+
+<hr>
+Data descriptors inherited from <a href="GridRegression.html#Encoder">GridRegression.Encoder</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="GridRegression.html#Encoder">GridRegression.Encoder</a>:<br>
+<dl><dt><strong>__metaclass__</strong> = &lt;class 'abc.ABCMeta'&gt;<dd><tt>Metaclass&nbsp;for&nbsp;defining&nbsp;Abstract&nbsp;Base&nbsp;Classes&nbsp;(ABCs).<br>
+&nbsp;<br>
+Use&nbsp;this&nbsp;metaclass&nbsp;to&nbsp;create&nbsp;an&nbsp;ABC.&nbsp;&nbsp;An&nbsp;ABC&nbsp;can&nbsp;be&nbsp;subclassed<br>
+directly,&nbsp;and&nbsp;then&nbsp;acts&nbsp;as&nbsp;a&nbsp;mix-in&nbsp;class.&nbsp;&nbsp;You&nbsp;can&nbsp;also&nbsp;register<br>
+unrelated&nbsp;concrete&nbsp;classes&nbsp;(even&nbsp;built-in&nbsp;classes)&nbsp;and&nbsp;unrelated<br>
+ABCs&nbsp;as&nbsp;'virtual&nbsp;subclasses'&nbsp;--&nbsp;these&nbsp;and&nbsp;their&nbsp;descendants&nbsp;will<br>
+be&nbsp;considered&nbsp;subclasses&nbsp;of&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;by&nbsp;the&nbsp;built-in<br>
+issubclass()&nbsp;function,&nbsp;but&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;won't&nbsp;show&nbsp;up&nbsp;in<br>
+their&nbsp;MRO&nbsp;(Method&nbsp;Resolution&nbsp;Order)&nbsp;nor&nbsp;will&nbsp;method<br>
+implementations&nbsp;defined&nbsp;by&nbsp;the&nbsp;registering&nbsp;ABC&nbsp;be&nbsp;callable&nbsp;(not<br>
+even&nbsp;via&nbsp;super()).</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="LdaEncoding">class <strong>LdaEncoding</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Stores&nbsp;LDA&nbsp;encoding&nbsp;results<br>
+Useful&nbsp;for&nbsp;enabling&nbsp;comparisons&nbsp;of&nbsp;encoding&nbsp;probabilities&nbsp;on&nbsp;a&nbsp;given&nbsp;topic<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="LdaEncoding-__cmp__"><strong>__cmp__</strong></a>(self, y, topicN<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="LdaEncoding-__getitem__"><strong>__getitem__</strong></a>(self, topicN)</dt></dl>
+
+<dl><dt><a name="LdaEncoding-__init__"><strong>__init__</strong></a>(self, name, values, topicN<font color="#909090">=0</font>)</dt></dl>
+
+<dl><dt><a name="LdaEncoding-__str__"><strong>__str__</strong></a>(self, topicN<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="LdaEncoding-setTopicN"><strong>setTopicN</strong></a>(self, topicN)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>name</strong> = None</dl>
+
+<dl><dt><strong>topicN</strong> = None</dl>
+
+<dl><dt><strong>values</strong> = None</dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-createLabeledCorpDict"><strong>createLabeledCorpDict</strong></a>(labeledImageDictionaryName, sourceReg, output<font color="#909090">=None</font>)</dt><dd><tt>Creates&nbsp;labeled&nbsp;dictionary&nbsp;of&nbsp;corpora&nbsp;for&nbsp;referencing<br>
+Sample&nbsp;running:<br>
+INFO:__ldaUtils__:Processing&nbsp;.../labeled_image_maps/003770.labels.txt<br>
+INFO:__ldaUtils__:Processing&nbsp;.../labeled_image_maps/003771.labels.txt<br>
+INFO:__ldaUtils__:Processing&nbsp;.../labeled_image_maps/003772.labels.txt<br>
+&nbsp;<br>
+Sample&nbsp;output:<br>
+{3770:&nbsp;['man',&nbsp;'bull',&nbsp;'people',&nbsp;'stadium',&nbsp;'dirt'],<br>
+3771:&nbsp;['grass',&nbsp;'sky',&nbsp;'trees',&nbsp;'village'],<br>
+3772:&nbsp;['seal',&nbsp;'rocks']}<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+labeledImageDictionaryName&nbsp;--&nbsp;Name&nbsp;for&nbsp;the&nbsp;dictionary<br>
+sourceReg&nbsp;--&nbsp;Regular&nbsp;expression&nbsp;to&nbsp;find&nbsp;labeled&nbsp;image&nbsp;files<br>
+Output&nbsp;--&nbsp;Pickle&nbsp;the&nbsp;dictionary&nbsp;{true,false}</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__author__</strong> = r'Andrew O\Harney'<br>
+<strong>logger</strong> = &lt;logging.Logger object&gt;</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#7799ee">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Author</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#7799ee"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Andrew&nbsp;O\Harney</td></tr></table>
+</body></html>
