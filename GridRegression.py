@@ -197,7 +197,6 @@ class GridRegression:
         numLags: Number of lags to be used for each event class"""
         logger.info( 'Setting number of lags')
         self.__nlags__ = numLags
-        self.__lambda__ = lmbda
     def setModel(self,model):
         """Set the model to be used for regression
         Keyword Arguments:
