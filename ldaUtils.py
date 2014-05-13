@@ -4,17 +4,18 @@ import pickle
 import numpy as np
 import pandas as pd
 import logging
-import ntpath
-import heapq
-from gensim import models
 from GridRegression import Encoder
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('__ldaUtils__')
 
+"""Utility functions and classes for working with event(epoch) encodings"""
+__author__ =  'Andrew O\Harney'
 
-#Utility class to store the output of encodings
 class LdaEncoding:
+    """Stores LDA encoding results
+    Useful for enabling comparisons of encoding probabilities on a given topic"""
+    
     name = None
     values = None
     topicN = None
@@ -31,21 +32,26 @@ class LdaEncoding:
     def __str__(self,topicN=None):
         return self.name if topicN is None else self.name + ' ' + str(self.values[topicN]) 
     def setTopicN(self,topicN):
+        #Topic number to compare probabilities of
         self.topicN = topicN
 
-#Creates labeled dictionary of corpora for referencing
-#Sample running:
-#INFO:__ldaUtils__:Processing .../labeled_image_maps/003770.labels.txt
-#INFO:__ldaUtils__:Processing .../labeled_image_maps/003771.labels.txt
-#INFO:__ldaUtils__:Processing .../labeled_image_maps/003772.labels.txt
-#Sample output:
-#{3770: ['man', 'bull', 'people', 'stadium', 'dirt'],
-#3771: ['grass', 'sky', 'trees', 'village'],
-#3772: ['seal', 'rocks']}
+
 def createLabeledCorpDict(labeledImageDictionaryName,sourceReg,output=None):
-    #labeledImageDictionaryName - Name for the dictionary
-    #sourceReg - regular expression to find labelled image files
-    #Output - pickle the dictionary {true,false}
+    """Creates labeled dictionary of corpora for referencing
+    Sample running:
+    INFO:__ldaUtils__:Processing .../labeled_image_maps/003770.labels.txt
+    INFO:__ldaUtils__:Processing .../labeled_image_maps/003771.labels.txt
+    INFO:__ldaUtils__:Processing .../labeled_image_maps/003772.labels.txt
+
+    Sample output:
+    {3770: ['man', 'bull', 'people', 'stadium', 'dirt'],
+    3771: ['grass', 'sky', 'trees', 'village'],
+    3772: ['seal', 'rocks']}
+
+    Keyword arguments:
+    labeledImageDictionaryName -- Name for the dictionary
+    sourceReg -- Regular expression to find labeled image files
+    Output -- Pickle the dictionary {true,false}"""
     
     if not glob.glob(labeledImageDictionaryName):
         docs = dict()
@@ -72,10 +78,9 @@ def createLabeledCorpDict(labeledImageDictionaryName,sourceReg,output=None):
 
 
 
-    
-    
-#Utility class to encode an event for a given LDA model
+
 class LdaEncoder(Encoder):
+        "Class to encapsulate encoding of an event for a given LDA model"
         #
         __ldaDict__ = None
         __ldaModel__= None

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from numpy.polynomial import Legendre
+from andyClasses.gridUtils import *
 import logging
 from abc import ABCMeta, abstractmethod
 import pdb
@@ -8,9 +9,11 @@ import pdb
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('__GridRegression__')
   
-"""Classes for performing online regression over data"""
+"""Functions and classes for performing online regression over data"""
 __author__ =  'Andrew O\Harney'
+  
 
+"""Abstract Classes"""
 class Encoder():
     """Abstraction for providing encoding for an event."""
     
@@ -55,13 +58,26 @@ class model():
     
     @abstractmethod
     def predict(self,X):
-        """Predict output for event(s)
+        """Online output for event(s)
         
         Keyword arguments:
         X -- Design matrix of event(s)"""
         pass
 
-    
+    def train(self,X,y,normFunc=None):
+        """Train model
+        
+        Keyword arguments:
+        X -- Design matrix of event(s). Must be iterable
+        y -- Data to train on
+        normaliseFunc -- normalisation function"""
+        
+        for (Xi,times) in X:
+            X_block = normFunc(Xi) if normFunc else Xi #Normalise if needed
+            X_block[np.isnan(X_block)] = 0 #Replace any nans from normalisation with 0 (e.g var=0 causes this)
+            self.partial_fit(X_block,y.ix[times]) #Fit this event to the model
+   
+"Concrete Classes"
 class GridRegression:
     """Main class for encapsulated regression over data"""
     
@@ -280,80 +296,36 @@ class GridRegression:
                 #design[lagCols] = prevCode[lagCols-1]
                 #prevCode = design
             yield design,times
-            
-    ################Normalisation functions##################
-    def meanDesign(self,events):
-        #Calculates the mean on columns of the full events matrix
-        logger.info('Calculating design mean')
-        designMean = np.zeros(self.nPoints())
-        design = self.__iterX__(events)
-        N = 0
-        for X,times in design:
-            designMean += np.sum(X[:self.__longestEvent__,:],axis=0)
-            N += len(times)
-        return designMean / N
-    
-    def l1Norm(self,events):
-        #Calculates the l1 normalisation parameter on columns of the design matrix
-        
-        logger.info('Calculating l1Norm')
-        l1 = np.zeros(self.nPoints())
-        design = self.__iterX__(events)
-        for X,_ in design:
-            l1 += np.sum(np.abs(X[:self.__longestEvent__,:]),axis=0)    
-        return np.sqrt(l1)
-    
-    def l2Norm(self,events):
-        #L2 norm for real valued event matrix
-        logger.info('Calculating l2Norm')
-        l2 = np.zeros(self.nPoints())
-        design = self.__iterX__(events)
-        for X,_ in design:
-            l2 += np.sum(X[:self.__longestEvent__,:]**2,axis=0)    
-        return np.sqrt(l2)
-        
-    def varDesign(self,events,mean=None):
-        #Calculates variance on columns of design matrix
-        
-        if mean is None:
-            mean = self.meanDesign(events)
-
-        logger.info('Calculating design variance')
-        designVar = np.zeros(self.nPoints())
-        design = self.__iterX__(events)
-        N = 0
-        for X,times in design:
-            designVar += np.sum((X[:self.__longestEvent__]-mean)**2,axis=0)
-            N += len(times)
-        return designVar / (N-1)
-    
-    
+                
     ###########Training functions###################
     def train(self,events,y,encoding=None,longest=None,normalise=None):
         """Online training of regression over events 
-        Longest -- Maximum event time in seconds (useful for limiting feedback periods ect.)
         Encoding -- Dictionary that has row encodings for a given label(not including lags)
+        Longest -- Limit the maximum event length in seconds
         Normalisation -- Normalisation coefficients to apply to columns of the design {zscore,l1,l2}
         Model -- Type of model to use {linear,SGD}"""
         model = self.model()
+        
         if longest is not None:
             self.setLongestEvent(longest)
+        else:
+            self.setLongestEvent(longest_event(events))
         if encoding is not None:
             self.setEncoding(encoding)
         if model is None:
             logger.info('Must specify a model type')
             return
         if normalise is not None:
-            designMean = self.meanDesign(events)
+            designMean = meanDesign(events)
             if normalise == 'zscore':
-                designVar = self.varDesign(events,self.__designMean__)
+                designVar = varDesign(events,self.__designMean__)
                 designSTD = designVar**0.5
                 self.__normFunc__ = lambda x: (x-designMean)/designSTD
             elif normalise == 'l2':
-                l2Norm = self.l2Norm(events)
+                l2Norm = l2Norm(events)
                 self.__normFunc__ = lambda x: (x-designMean)/l2Norm
             elif normalise == 'l1':
-                l1Norm = self.l1Norm(events)
+                l1Norm = l1Norm(events)
                 self.__normFunc__ = lambda x : (x-designMean)/l1Norm
             else:
                 normalise = None         
@@ -363,13 +335,9 @@ class GridRegression:
         logger.info('Training events')
         design = self.__iterX__(events)
         
-        #Generate the design for each event
-        #self.__model__.train(design)
-        for j,(X,times) in enumerate(design):
-            X_block = self.__normFunc__(X) if normalise else X #Normalise if needed
-            X_block[np.isnan(X_block)] = 0 #Replace any nans from normalisation with 0 (e.g var=0 causes this)
-            self.__model__.partial_fit(X_block,y.ix[times]) #Fit this event to the model
-        return self.__model__.coefs()
+        #Train model
+        model.train(design, y, self.__normFunc__)
+        return model.coefs()
     
     def predict(self,events,coefs=None):
 
@@ -383,10 +351,12 @@ class GridRegression:
         grid = self.grid()
         predictTimes = grid.eventsTimes(events,limit=self.longestEvent()/grid.fs())
         prediction = pd.DataFrame(np.zeros([len(predictTimes),ntargets]),index=predictTimes,columns=grid.wc())
+        model = self.model()
+        normFunc = self.__normFunc__
         
         #Generate design for each event
-        for j,(X,times) in enumerate(design):
-            X_block = self.__normFunc__(X) if self.__normFunc__ else X #Normalise if needed
+        for j,(Xi,times) in enumerate(design):
+            X_block = normFunc(Xi) if normFunc else Xi #Normalise if needed
             X_block[np.isnan(X_block)] = 0
-            prediction.ix[times]= self.__model__.predict(X_block)
+            prediction.ix[times]= model.predict(X_block)
         return prediction 
