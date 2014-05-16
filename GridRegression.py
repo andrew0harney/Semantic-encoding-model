@@ -376,16 +376,16 @@ class GridRegression:
             logger.info('Must specify a model type')
             return
         if normalise is not None:
-            designMean = meanDesign(events)
+            designMean = meanDesign(self.nPoints(),self.__iterX__(events))
             if normalise == 'zscore':
-                designVar = varDesign(events,self.__designMean__)
+                designVar = varDesign(self.nPoints(),__iterX__(events),designMean)
                 designSTD = designVar**0.5
                 self.__normFunc__ = lambda x: (x-designMean)/designSTD
             elif normalise == 'l2':
-                l2Norm = l2Norm(events)
+                l2Norm = l2Norm(self.nPoints(),__iterX__(events))
                 self.__normFunc__ = lambda x: (x-designMean)/l2Norm
             elif normalise == 'l1':
-                l1Norm = l1Norm(events)
+                l1Norm = l1Norm(self.nPoints(),__iterX__(events))
                 self.__normFunc__ = lambda x : (x-designMean)/l1Norm
             else:
                 normalise = None         
