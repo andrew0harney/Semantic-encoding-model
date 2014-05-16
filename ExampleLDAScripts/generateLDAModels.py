@@ -50,7 +50,7 @@ for document in documents:
 
 random.shuffle(documents)
 
-#Store full corpora and dictionaries
+#Store full corpus and dictionaries
 print 'Creating Vocab'
 dictionary = corpora.Dictionary(documents)
 print 'Number of unique objects %d'%len(dictionary)
@@ -63,7 +63,7 @@ corp = [dictionary.doc2bow(doc) for doc in documents]
 corpora.MmCorpus.serialize(corpName, corp)
 
 ######################################
-#Train and test
+#Train LDA models
 corp = list(corp)
 
 perplexityName = #Save path for perplexity matrix
@@ -78,7 +78,7 @@ for i,num_words in enumerate(nwords):
     #Use only num_words number of words in documents
     print 'Creating training corpus'
     t_dict = copy.copy(dictionary)
-    t_dict.filter_extremes(no_below=0.001*len(documents),no_above=1,keep_n=num_words) #Removes low occurring words (less than num_words and occurring in less than 0.1% of documents)
+    t_dict.filter_extremes(no_below=0.001*len(documents),no_above=1,keep_n=num_words) #Removes infrequently occurring words (less than num_words and occurring in less than 0.1% of documents)
     t_docs = filter(None,[[word for word in doc if word in t_dict.values()] for doc in documents]) #Remove any words no longer accounted for and empty documents
     t_corp = [t_dict.doc2bow(doc) for doc in t_docs] #Create training corpus
     #
