@@ -95,16 +95,16 @@ class GridRegression:
     __normFunc__ = None
     __model__ = None           
     
-    def __init__(self,model,grid,nlags=0,noiseOrders=None,encoding=None):
+    def __init__(self,model,signalManager,nlags=1,noiseOrders=None,encoding=None):
         """Keyword Arguments:
         model -- ML model to use for regression. Must be of type GridRegression.model
-        grid -- Grid object containing data
+        signalManager -- Grid object containing data
         nlags -- Number of lags to use for each encoding category
         noiseOrders=None -- Polynomial orders of noise
         encoding=None -- Encoder for given event. Must be of type GridRegression.Encoder"""
         
         self.setNumLags(nlags)
-        self.setGrid(grid)
+        self.setGrid(signalManager)
         self.setNoiseOrders(noiseOrders)
         self.setEncoding(encoding)
         self.setnClasses(encoding.numClasses())
