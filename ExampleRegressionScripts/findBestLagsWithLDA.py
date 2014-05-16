@@ -26,9 +26,9 @@ log_path =  #
 modelDir = #
 all_stims = #
 
+#Load the signals and set working data
 grid = SignalManager(data_path, log_file=log_path)
 baseChannels = grid.channels()[:-2]
-
 chans = [chan for chan in grid.channels()]
 grid.set_wd(channels=chans,meanCalcChans=baseChannels) 
 
