@@ -282,7 +282,63 @@ class GridRegression:
             design = design
             prevCode = design[i,:]
         return pd.DataFrame(design,index=times)
-            
+      
+  """Normalisation Functions"""
+  def meanDesign(self,events):
+      """Calculates the mean on columns of the full events matrix
+      Keyword Arguments:
+      events -- Events to find mean signal of"""
+      logger.info('Calculating design mean')
+      designMean = np.zeros(self.nPoints())
+      design = self.__iterX__(events)
+      N = 0
+      for X,times in design:
+          designMean += np.sum(X[:self.__longestEvent__,:],axis=0)
+          N += len(times)
+      return designMean / N
+  
+  def l1Norm(self,events):
+      """Calculates the l1 normalisation parameter on columns of the design matrix
+      Keyword Arguments:
+      events -- Events to find mean signal of"""
+      
+      logger.info('Calculating l1Norm')
+      l1 = np.zeros(self.nPoints())
+      design = self.__iterX__(events)
+      for X,_ in design:
+          l1 += np.sum(np.abs(X[:self.__longestEvent__,:]),axis=0)    
+      return np.sqrt(l1)
+  
+  def l2Norm(self,events):
+      """L2 norm for real valued event matrix
+      Keyword Arguments:
+      events -- Events to find mean signal of"""
+      
+      logger.info('Calculating l2Norm')
+      l2 = np.zeros(self.nPoints())
+      design = self.__iterX__(events)
+      for X,_ in design:
+          l2 += np.sum(X[:self.__longestEvent__,:]**2,axis=0)    
+      return np.sqrt(l2)
+    
+  def varDesign(self,events,mean=None):
+      """Calculates variance on columns of design matrix
+      Keyword Arguments:
+      events -- Events to find mean signal of
+      mean=None -- Mean of events (will be calculated if not supplied)"""
+      
+      if mean is None:
+          mean = self.meanDesign(events)
+  
+      logger.info('Calculating design variance')
+      designVar = np.zeros(self.nPoints())
+      design = self.__iterX__(events)
+      N = 0
+      for X,times in design:
+          designVar += np.sum((X[:self.__longestEvent__]-mean)**2,axis=0)
+          N += len(times)
+      return designVar / (N-1)  
+          
     def genX(self,events):
         """Generates the event matrix for events (in memory). Use with caution!
         Keyword Arguments:
