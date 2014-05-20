@@ -16,10 +16,12 @@ The GridRegression class works by training design matrices for each event and wo
 
 In addition to the noise orders thare are supplied, GridRegression also adds 60hz sine and cosine waves to deal with mains frequency noise. Note then that the resulting inferred parameters are then split into alpha and beta, the design and noise parameters respectively. 
 
+To see how signal prediction can be done take a look at the exampleRegressionScripts. 
+
 
 ---------------------------------
 Requirements Notes:
-Check the accompanying docs for particular requirements of each module. Especially not the following:
+Check the accompanying docs for particular requirements of each module. Especially note the following:
 
 - signal management utility - https://github.com/andrew0harney/Multi-channel-signal-management-utility
 - gensim - (great LDA package http://radimrehurek.com/gensim/)
