@@ -149,7 +149,7 @@ class GridRegression:
         """Model in use"""
         return self.__model__
     def alphaH(self):
-        """Inferred parameters for encoding columns"""
+        """Inferred parameters for encoding (design) columns"""
         return self.coefs()[:-self.noise().shape[1],:]
     def betaH(self):
         """Inferred parameters for noise columns"""
