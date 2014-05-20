@@ -14,7 +14,7 @@ Secondly (and the bulk of the code here) is to predict signal by some supervised
 
 The GridRegression class works by training design matrices for each event and works with models in an iterative fashion. That is, the design matrix is never explicitly constructed, but rather models are updated based on a sequence of partial design matrices for each event. This helps to save on memoery. The encoding for a specific event is a vector returned by a GridRegression.Encoder. The GridRegression class will automatically handle the time progression for the lags and portion of the design relating to noise. For encoding based on LDA output the ldaUtils.LDAEncoder is available. 
 
-In addition to the noise orders thare are supplied, GridRegression also adds 60hz sine and cosine waves to deal with mains frequency noise. Note then that the resulting inferred parameters are then split into alpha and beta the design and noise parameters respectively. 
+In addition to the noise orders thare are supplied, GridRegression also adds 60hz sine and cosine waves to deal with mains frequency noise. Note then that the resulting inferred parameters are then split into alpha and beta, the design and noise parameters respectively. 
 
 
 ---------------------------------
