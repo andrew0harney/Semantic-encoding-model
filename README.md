@@ -23,10 +23,15 @@ To see how signal prediction can be done take a look at the exampleRegressionScr
 Requirements Notes:
 Check the accompanying docs for particular requirements of each module. Especially note the following:
 
-- signal management utility - https://github.com/andrew0harney/Multi-channel-signal-management-utility
-- gensim - (great LDA package http://radimrehurek.com/gensim/)
-- nltk - If you wish to perform advanced natural language processing for topic clustering http://www.nltk.org/
+  - signal management utility - https://github.com/andrew0harney/Multi-channel-signal-management-utility
+  - gensim - (great LDA package http://radimrehurek.com/gensim/)
+  - nltk - If you wish to perform advanced natural language processing for topic clustering http://www.nltk.org/
 
+
+---------------------------------
+TODO:
+
+  - Models.RegLearner has not yet been implemented
 
 ---------------------------------
 Notes:
