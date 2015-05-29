@@ -10,7 +10,7 @@ Secondly (and the bulk of the code here) is to predict signal by some supervised
   - SignalManager - SignalManager object to provide information about the signals
   - nlags - For regression it is useful to consider previous time points when determining the current signal amplitude. The number of previous     points is the number of 'lags'
   - noiseOrders - The Gridregression class also takes care of detrending noise. It will manage a noise as a series of polynomials - the orders     of which are specified here.
-  - encoder - Any object inheritying GridRegression.Encoder . This object specifies the column encodings (without lags) to be used for a given     event
+  - encoder - Any object inheriting GridRegression.Encoder . This object specifies the column encodings (without lags) to be used for a given     event
 
 The GridRegression class works by training design matrices for each event and works with models in an iterative fashion. That is, the design matrix is never explicitly constructed, but rather models are updated based on a sequence of partial design matrices for each event. This helps to save on memoery. The encoding for a specific event is a vector returned by a GridRegression.Encoder. The GridRegression class will automatically handle the time progression for the lags and portion of the design relating to noise. For encoding based on LDA output the ldaUtils.LDAEncoder is available. 
 
